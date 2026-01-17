@@ -5,35 +5,93 @@ from datetime import datetime, timedelta
 CLUB = "3COM Squad Valsequillo"
 UA = "Mozilla/5.0 (GitHubActions)"
 
+RE_SCORE = re.compile(r"^\d+\s*-\s*\d+$")
+RE_DATE = re.compile(r"(\d{2}/\d{2}/\d{4})")
+RE_TIME = re.compile(r"(\d{2}:\d{2})")
+
+def norm_score(s: str) -> str:
+    s = (s or "").strip()
+    if not s:
+        return ""
+    s = re.sub(r"\s*", "", s)          # "15 - 45" -> "15-45"
+    s = s.replace("-", " - ")          # "15-45" -> "15 - 45"
+    s = re.sub(r"\s+", " ", s).strip()
+    return s
+
 def create_ics(slug, title, matches):
-    ics_content = [
-        "BEGIN:VCALENDAR", "VERSION:2.0",
+    ics = [
+        "BEGIN:VCALENDAR",
+        "VERSION:2.0",
         "PRODID:-//3COM Squad Valsequillo//NONSGML v1.0//ES",
-        f"X-WR-CALNAME:{title}", "X-WR-TIMEZONE:Atlantic/Canary",
-        "CALSCALE:GREGORIAN", "METHOD:PUBLISH"
+        f"X-WR-CALNAME:{title}",
+        "X-WR-TIMEZONE:Atlantic/Canary",
+        "CALSCALE:GREGORIAN",
+        "METHOD:PUBLISH",
     ]
+
     for m in matches:
         try:
-            dt = datetime.strptime(m['fecha_texto'], "%d/%m/%Y %H:%M")
-            dt_str = dt.strftime("%Y%m%dT%H%M%S")
-            dt_end = (dt + timedelta(hours=1, minutes=30)).strftime("%Y%m%dT%H%M%S")
-            uid = f"{slug}-{dt_str}@valsequillo"
-            res = f" ({m['resultado']})" if m.get('resultado') else ""
-            ics_content.extend([
-                "BEGIN:VEVENT", f"UID:{uid}",
-                f"DTSTAMP:{datetime.now().strftime('%Y%m%dT%H%M%SZ')}",
-                f"DTSTART:{dt_str}", f"DTEND:{dt_end}",
-                f"SUMMARY:{m['local']}{res} vs {m['visitante']}",
-                f"LOCATION:{m['lugar']}",
-                f"DESCRIPTION:Partido de {title}", "END:VEVENT"
-            ])
-        except: continue
-    ics_content.append("END:VCALENDAR")
+            dt = datetime.strptime(m["fecha_texto"], "%d/%m/%Y %H:%M")
+        except Exception:
+            continue
+
+        dt_str = dt.strftime("%Y%m%dT%H%M%S")
+        dt_end = (dt + timedelta(hours=1, minutes=30)).strftime("%Y%m%dT%H%M%S")
+        uid = f"{slug}-{dt_str}@valsequillo"
+
+        res = f" ({m['resultado']})" if m.get("resultado") else ""
+        summary = f"{m['local']}{res} vs {m['visitante']}".strip()
+
+        ics.extend([
+            "BEGIN:VEVENT",
+            f"UID:{uid}",
+            f"DTSTAMP:{datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')}",
+            f"DTSTART:{dt_str}",
+            f"DTEND:{dt_end}",
+            f"SUMMARY:{summary}",
+            f"LOCATION:{m.get('lugar','')}",
+            f"DESCRIPTION:Partido de {title}",
+            "END:VEVENT",
+        ])
+
+    ics.append("END:VCALENDAR")
     with open(os.path.join(slug, "calendario.ics"), "w", encoding="utf-8") as f:
-        f.write("\n".join(ics_content))
+        f.write("\n".join(ics))
+
+def extract_teams(tr, tds):
+    # 1) Método fiable: enlaces a equipo.php CON TEXTO (ignora los 2 primeros vacíos)
+    a_eq = tr.select('a[href*="equipo.php"]')
+    names = []
+    for a in a_eq:
+        t = a.get_text(" ", strip=True)
+        if not t:
+            continue
+        if t.upper() == "VS":
+            continue
+        names.append(t)
+
+    # quitar duplicados manteniendo orden
+    seen = set()
+    names = [x for x in names if not (x in seen or seen.add(x))]
+
+    if len(names) >= 2:
+        return names[0], names[1]
+
+    # 2) Fallback: usar el texto de la primera celda "VS TeamA - TeamB"
+    if tds:
+        txt = tds[0].get_text(" ", strip=True)
+        txt = re.sub(r"^\s*VS\s+", "", txt, flags=re.IGNORECASE).strip()
+        if " - " in txt:
+            p = txt.split(" - ", 1)
+            return p[0].strip(), p[1].strip()
+
+    return "", ""
 
 def main():
-    if not os.path.exists("categories.json"): return
+    if not os.path.exists("categories.json"):
+        print("No categories.json found")
+        return
+
     with open("categories.json", "r", encoding="utf-8") as f:
         cats = json.load(f)
 
@@ -46,55 +104,54 @@ def main():
             matches = []
 
             for tr in rows:
-                if CLUB.lower() in tr.get_text().lower():
-                    tds = tr.find_all("td")
-                    if len(tds) < 3: continue
+                # mantenemos el filtro del club para no listar toda la competición
+                if CLUB.lower() not in tr.get_text(" ", strip=True).lower():
+                    continue
 
-                    # 1. EQUIPOS (Por enlaces)
-                    links = tr.find_all("a", href=re.compile(r'id_equipo|equipo'))
-                    if len(links) >= 2:
-                        local = links[0].get_text(strip=True)
-                        visitante = links[1].get_text(strip=True)
-                    else:
-                        txt_eq = tds[1].get_text(" ", strip=True)
-                        txt_limpio = re.sub(r'\d+\s*-\s*\d+', ' vs ', txt_eq)
-                        parts = re.split(r'\s*-\s*|\s+VS\s+|\s+vs\s+', txt_limpio, flags=re.IGNORECASE)
-                        local = parts[0].strip() if len(parts) > 0 else "Local"
-                        visitante = parts[1].strip() if len(parts) > 1 else "Visitante"
+                tds = tr.find_all("td")
+                if len(tds) < 4:
+                    continue
 
-                    # 2. FECHA Y RESULTADO
-                    fecha_f, resultado = "Fecha por confirmar", ""
-                    for td in tds:
-                        t = td.get_text(strip=True)
-                        f_m = re.search(r'(\d{2}/\d{2}/\d{4})', t)
-                        if f_m:
-                            h_m = re.search(r'(\d{2}:\d{2})', t)
-                            fecha_f = f"{f_m.group(1)} {h_m.group(1) if h_m else '00:00'}"
-                        if re.match(r'^\d+\s*-\s*\d+$', t):
-                            resultado = t
+                local, visitante = extract_teams(tr, tds)
 
-                    # 3. LUGAR (CON LISTA NEGRA)
-                    lugar = "Pabellón por confirmar"
-                    for td in tds:
-                        t = td.get_text(strip=True)
-                        # Si es un texto largo y NO es la fecha ni el resultado
-                        if len(t) > 10 and not re.search(r'\d{2}/\d{2}', t) and not re.match(r'^\d+\s*-\s*\d+$', t):
-                            # LISTA NEGRA: Si el texto contiene el nombre de los equipos, NO es el lugar
-                            if local.lower() not in t.lower() and visitante.lower() not in t.lower():
-                                lugar = t
-                                break
+                # Fecha (en iSquad suele estar en tds[2], pero lo buscamos por patrón para ser robustos)
+                fecha_texto = "Fecha por confirmar"
+                for td in tds:
+                    t = td.get_text(" ", strip=True)
+                    dm = RE_DATE.search(t)
+                    if dm:
+                        hm = RE_TIME.search(t)
+                        fecha_texto = f"{dm.group(1)} {hm.group(1) if hm else '00:00'}"
+                        break
 
-                    matches.append({
-                        "local": local, "visitante": visitante,
-                        "resultado": resultado, "fecha_texto": fecha_f,
-                        "lugar": lugar, "es_casa": (CLUB.lower() in local.lower())
-                    })
+                # Lugar (en iSquad suele ser tds[3])
+                lugar = tds[3].get_text(" ", strip=True) if len(tds) > 3 else ""
+
+                # Resultado (si existe)
+                resultado = ""
+                for td in tds:
+                    t = td.get_text(" ", strip=True)
+                    if RE_SCORE.match(t):
+                        resultado = norm_score(t)
+                        break
+
+                matches.append({
+                    "local": local,
+                    "visitante": visitante,
+                    "resultado": resultado,
+                    "fecha_texto": fecha_texto,
+                    "lugar": lugar if lugar else "Pabellón por confirmar",
+                    "es_casa": (CLUB.lower() in (local or "").lower()),
+                })
 
             os.makedirs(slug, exist_ok=True)
             with open(os.path.join(slug, "partidos.json"), "w", encoding="utf-8") as out:
                 json.dump({"categoria": title, "matches": matches}, out, ensure_ascii=False, indent=2)
+
             create_ics(slug, title, matches)
-        except Exception as e: print(f"Error en {slug}: {e}")
+
+        except Exception as e:
+            print(f"Error en {slug}: {e}")
 
 if __name__ == "__main__":
     main()
