@@ -48,50 +48,34 @@ def main():
             for tr in rows:
                 if CLUB.lower() in tr.get_text().lower():
                     tds = tr.find_all("td")
-                    if len(tds) < 3: continue
+                    if len(tds) < 4: continue
 
-                    # --- 1. EXTRACCIÓN DE EQUIPOS (MÉTODO ROBUSTO) ---
-                    # Buscamos todos los enlaces que apunten a un equipo
+                    # 1. EQUIPOS (Siempre en la segunda columna o por enlaces)
                     links = tr.find_all("a", href=re.compile(r'id_equipo|equipo'))
                     if len(links) >= 2:
                         local = links[0].get_text(strip=True)
                         visitante = links[1].get_text(strip=True)
                     else:
-                        # Si no hay enlaces, buscamos en la celda que suele tener el " - "
-                        # Pero limpiamos cualquier número que parezca un marcador
-                        txt_celda = tds[1].get_text(" ", strip=True)
-                        # Quitamos marcadores tipo "15 - 45" para quedarnos solo con nombres
-                        txt_limpio = re.sub(r'\d+\s*-\s*\d+', ' vs ', txt_celda)
+                        txt_eq = tds[1].get_text(" ", strip=True)
+                        txt_limpio = re.sub(r'\d+\s*-\s*\d+', ' vs ', txt_eq)
                         parts = re.split(r'\s*-\s*|\s+VS\s+|\s+vs\s+', txt_limpio, flags=re.IGNORECASE)
                         local = parts[0].strip() if len(parts) > 0 else "Local"
                         visitante = parts[1].strip() if len(parts) > 1 else "Visitante"
 
-                    # --- 2. EXTRACCIÓN DE RESULTADO ---
+                    # 2. FECHA (Siempre en la tercera columna)
+                    raw_f = tds[2].get_text(strip=True)
+                    f_m = re.search(r'(\d{2}/\d{2}/\d{4})\s*(\d{2}:\d{2})?', raw_f.replace(" ", ""))
+                    fecha_f = f"{f_m.group(1)} {f_m.group(2) if f_m.group(2) else '00:00'}" if f_m else "Fecha por confirmar"
+
+                    # 3. LUGAR (Siempre en la cuarta columna)
+                    lugar = tds[3].get_text(strip=True) if len(tds) > 3 else "Pabellón por confirmar"
+
+                    # 4. RESULTADO (Buscamos en toda la fila por si acaso)
                     resultado = ""
                     for td in tds:
                         t = td.get_text(strip=True)
-                        # Buscamos exactamente el patrón "Número - Número"
                         if re.match(r'^\d+\s*-\s*\d+$', t):
                             resultado = t
-                            break
-
-                    # --- 3. EXTRACCIÓN DE FECHA ---
-                    fecha_f = "Fecha por confirmar"
-                    for td in tds:
-                        t = td.get_text(strip=True)
-                        f_m = re.search(r'(\d{2}/\d{2}/\d{4})\s*(\d{2}:\d{2})?', t.replace(" ", ""))
-                        if f_m:
-                            fecha_f = f"{f_m.group(1)} {f_m.group(2) if f_m.group(2) else '00:00'}"
-                            break
-
-                    # --- 4. EXTRACCIÓN DE LUGAR ---
-                    # El lugar suele ser la celda que NO es fecha, NI equipos, NI resultado
-                    lugar = "Pabellón por confirmar"
-                    for td in tds:
-                        t = td.get_text(strip=True)
-                        # Si es un texto largo, no tiene números de fecha y no son los equipos
-                        if len(t) > 12 and not re.search(r'\d{2}/\d{2}', t) and t != local and t != visitante:
-                            lugar = t
                             break
 
                     matches.append({
