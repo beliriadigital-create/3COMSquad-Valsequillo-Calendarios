@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>TF - 3COM Squad Valsequillo</title>
+  <style>
+    body{font-family:system-ui,Arial;margin:20px;background:#f0f2f5}
+    .match{background:#fff;padding:15px;border-radius:10px;margin-bottom:12px;border-left:6px solid #1976d2;box-shadow:0 2px 4px rgba(0,0,0,0.05)}
+    .home{border-left-color:#2e7d32}
+    .fecha{color:#666;font-size:0.9rem;font-weight:bold}
+    .lugar{color:#d32f2f;font-size:0.85rem;margin-top:5px}
+    .btn-volver{display:inline-block;margin-bottom:16px;text-decoration:none;color:#1976d2;font-weight:bold}
+  </style>
+</head>
+<body>
+  <a href="../" class="btn-volver">← Volver</a>
+  <h1 id="titulo">Cargando...</h1>
+  <div id="lista">Cargando partidos...</div>
+
+  <script>
+    fetch('./partidos.json')
+      .then(r => r.json())
+      .then(data => {
+        document.getElementById('titulo').textContent = data.categoria || 'Calendario';
+        const lista = document.getElementById('lista');
+        lista.innerHTML = '';
+
+        const matches = data.matches || [];
+        if (matches.length === 0) {
+          lista.innerHTML = '<p>No se encontraron partidos para 3COM Squad Valsequillo.</p>';
+          return;
+        }
+
+        matches.forEach(m => {
+          const div = document.createElement('div');
+          div.className = 'match ' + (m.es_casa ? 'home' : '');
+          div.innerHTML = `
+            <div class="fecha">${m.fecha_texto || ''}</div>
+            <div><strong>${m.local || ''}</strong> vs <strong>${m.visitante || ''}</strong></div>
+            <div class="lugar">📍 ${m.lugar || ''}</div>
+            <div style="font-size:0.8rem; color:blue; margin-top:6px">
+              ${m.es_casa ? '🏠 JUGAMOS EN CASA' : '✈️ VISITANTE'}
+            </div>
+          `;
+          lista.appendChild(div);
+        });
+      })
+      .catch(() => {
+        document.getElementById('lista').innerHTML =
+          '<p>Error cargando datos. Revisa que exista <code>partidos.json</code> en esta carpeta.</p>';
+      });
+  </script>
+</body>
+</html>
