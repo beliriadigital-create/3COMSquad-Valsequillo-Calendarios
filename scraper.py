@@ -1,87 +1,84 @@
-import json
-import os
-import re
-from datetime import datetime
-
-import requests
+import json, os, re, requests
 from bs4 import BeautifulSoup
+from datetime import datetime
 
 CLUB = "3COM Squad Valsequillo"
 UA = "Mozilla/5.0 (GitHubActions)"
 
-def clean(s):
-    return re.sub(r"\s+", " ", (s or "")).strip()
+def create_ics(slug, title, matches):
+    ics_content = [
+        "BEGIN:VCALENDAR",
+        "VERSION:2.0",
+        "PRODID:-//3COM Squad Valsequillo//NONSGML v1.0//ES",
+        f"X-WR-CALNAME:{title}",
+        "X-WR-TIMEZONE:Atlantic/Canary",
+        "CALSCALE:GREGORIAN",
+        "METHOD:PUBLISH"
+    ]
+    
+    for m in matches:
+        # Intentar extraer fecha para el formato ICS (YYYYMMDDTHHMMSS)
+        try:
+            # Formato esperado: "15/10/2023 12:00"
+            dt = datetime.strptime(m['fecha_texto'], "%d/%m/%Y %H:%M")
+            dt_str = dt.strftime("%Y%m%dT%H%M%S")
+            dt_end = dt.strftime("%Y%m%dT%H%M%S") # Duración estimada no definida, ponemos misma hora
+        except:
+            continue
 
-def find_table(soup):
-    for table in soup.find_all("table"):
-        headers = [clean(th.get_text()).upper() for th in table.find_all("th")]
-        if "EQUIPOS" in headers and "FECHA" in headers and "LUGAR" in headers:
-            return table, headers
-    return None, None
+        uid = f"{slug}-{dt_str}@valsequillo-balonmano"
+        ics_content.extend([
+            "BEGIN:VEVENT",
+            f"UID:{uid}",
+            f"DTSTAMP:{datetime.now().strftime('%Y%m%dT%H%M%SZ')}",
+            f"DTSTART:{dt_str}",
+            f"SUMMARY:{m['local']} vs {m['visitante']}",
+            f"LOCATION:{m['lugar']}",
+            f"DESCRIPTION:Partido de {title}. Estado: {m['estado']}",
+            "END:VEVENT"
+        ])
+    
+    ics_content.append("END:VCALENDAR")
+    
+    with open(os.path.join(slug, "calendario.ics"), "w", encoding="utf-8") as f:
+        f.write("\n".join(ics_content))
 
 def main():
     with open("categories.json", "r", encoding="utf-8") as f:
         cats = json.load(f)
 
     for c in cats:
-        slug = c["slug"]
-        title = c["title"]
-        url = c["url"]
-
+        slug, title, url = c["slug"], c["title"], c["url"]
         r = requests.get(url, headers={"User-Agent": UA}, timeout=30)
-        r.raise_for_status()
-
         soup = BeautifulSoup(r.text, "html.parser")
-        table, headers = find_table(soup)
-        if not table:
-            raise RuntimeError(f"No encontré la tabla de partidos en {url}")
-
-        hmap = {h: i for i, h in enumerate(headers)}
-        i_eq = hmap["EQUIPOS"]
-        i_f = hmap["FECHA"]
-        i_l = hmap["LUGAR"]
-        i_e = hmap.get("ESTADO", None)
+        table = soup.find("table")
+        if not table: continue
 
         matches = []
         for tr in table.find_all("tr"):
-            tds = tr.find_all("td")
-            if not tds:
-                continue
+            if CLUB in tr.get_text():
+                tds = tr.find_all("td")
+                if len(tds) < 4: continue
+                equipos = tds[1].get_text(strip=True).replace("VS", "").strip()
+                local, visitante = equipos, ""
+                if " - " in equipos:
+                    parts = equipos.split(" - ", 1)
+                    local, visitante = parts[0].strip(), parts[1].strip()
 
-            equipos_raw = clean(tds[i_eq].get_text(" ", strip=True))
-            if CLUB not in equipos_raw:
-                continue
-
-            equipos_clean = re.sub(r"^\s*VS\s*", "", equipos_raw, flags=re.I).strip()
-            local, visitante = equipos_clean, ""
-            if " - " in equipos_clean:
-                local, visitante = [clean(x) for x in equipos_clean.split(" - ", 1)]
-
-            fecha_texto = clean(tds[i_f].get_text(" ", strip=True))
-            lugar = clean(tds[i_l].get_text(" ", strip=True))
-            estado = clean(tds[i_e].get_text(" ", strip=True)) if (i_e is not None and i_e < len(tds)) else "Pendiente"
-
-            matches.append({
-                "local": local,
-                "visitante": visitante,
-                "fecha_texto": fecha_texto,
-                "lugar": lugar,
-                "estado": estado,
-                "es_casa": (CLUB in local),
-            })
-
-        payload = {
-            "club": CLUB,
-            "categoria": title,
-            "slug": slug,
-            "source_url": url,
-            "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "matches": matches
-        }
+                matches.append({
+                    "local": local, "visitante": visitante,
+                    "fecha_texto": tds[2].get_text(strip=True),
+                    "lugar": tds[3].get_text(strip=True),
+                    "estado": tds[4].get_text(strip=True) if len(tds)>4 else "Pendiente",
+                    "es_casa": (CLUB in local)
+                })
 
         os.makedirs(slug, exist_ok=True)
+        # Guardar JSON
         with open(os.path.join(slug, "partidos.json"), "w", encoding="utf-8") as out:
-            json.dump(payload, out, ensure_ascii=False, indent=2)
+            json.dump({"categoria": title, "matches": matches}, out, ensure_ascii=False, indent=2)
+        # Guardar ICS
+        create_ics(slug, title, matches)
 
 if __name__ == "__main__":
     main()
