@@ -2,12 +2,12 @@
   "categoria": "Liga Territorial Femenina (2025/26)",
   "matches": [
     {
-      "local": "3COM Squad Valsequillo",
-      "visitante": "CLUB DEPORTIVO CIUDAD DE PUERTO",
+      "local": "",
+      "visitante": "",
       "resultado": "",
       "fecha_texto": "18/01/2026 12:00",
       "lugar": "VS3COM Squad Valsequillo-CLUB DEPORTIVO CIUDAD DE PUERTO",
-      "es_casa": true
+      "es_casa": false
     }
   ]
 }

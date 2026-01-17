@@ -2,12 +2,12 @@
   "categoria": "Juvenil Femenino (2025/26)",
   "matches": [
     {
-      "local": "3COM SQUAD VALSEQUILLO",
-      "visitante": "ROMADE",
+      "local": "",
+      "visitante": "",
       "resultado": "",
       "fecha_texto": "Fecha por confirmar",
       "lugar": "VS3COM SQUAD VALSEQUILLO-ROMADE",
-      "es_casa": true
+      "es_casa": false
     }
   ]
 }
