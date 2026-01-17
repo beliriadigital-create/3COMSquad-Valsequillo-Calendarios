@@ -18,11 +18,12 @@ def create_ics(slug, title, matches):
             dt_str = dt.strftime("%Y%m%dT%H%M%S")
             dt_end = (dt + timedelta(hours=1, minutes=30)).strftime("%Y%m%dT%H%M%S")
             uid = f"{slug}-{dt_str}@valsequillo"
+            summary = f"{m['local']} {m.get('resultado','')} vs {m['visitante']}"
             ics_content.extend([
                 "BEGIN:VEVENT", f"UID:{uid}",
                 f"DTSTAMP:{datetime.now().strftime('%Y%m%dT%H%M%SZ')}",
                 f"DTSTART:{dt_str}", f"DTEND:{dt_end}",
-                f"SUMMARY:{m['local']} vs {m['visitante']}",
+                f"SUMMARY:{summary.replace('  ',' ')}",
                 f"LOCATION:{m['lugar']}",
                 f"DESCRIPTION:Partido de {title}", "END:VEVENT"
             ])
@@ -49,37 +50,43 @@ def main():
                     tds = tr.find_all("td")
                     if len(tds) < 3: continue
 
-                    # 1. BUSCAR EQUIPOS POR ENLACES (Lo más fiable en iSquad)
+                    # 1. EQUIPOS (por enlaces)
                     links = tr.find_all("a", href=re.compile(r'id_equipo|equipo'))
                     if len(links) >= 2:
                         local = links[0].get_text(strip=True)
                         visitante = links[1].get_text(strip=True)
                     else:
-                        # Fallback: buscar por separador si no hay enlaces
-                        text_equipos = tds[1].get_text(" ", strip=True)
-                        parts = re.split(r'\s*-\s*|\s+VS\s+', text_equipos, flags=re.IGNORECASE)
+                        text_eq = tds[1].get_text(" ", strip=True)
+                        parts = re.split(r'\s*-\s*|\s+VS\s+', text_eq, flags=re.IGNORECASE)
                         local = parts[0].strip() if len(parts) > 0 else "Local"
                         visitante = parts[1].strip() if len(parts) > 1 else "Visitante"
 
-                    # 2. BUSCAR FECHA Y HORA
+                    # 2. RESULTADO (si existe)
+                    resultado = ""
+                    # Buscamos una celda que tenga el formato "Número - Número"
+                    for td in tds:
+                        t = td.get_text(strip=True)
+                        if re.match(r'^\d+\s*-\s*\d+$', t):
+                            resultado = t
+                            break
+
+                    # 3. FECHA
                     fecha_final = "Fecha por confirmar"
                     for td in tds:
                         t = td.get_text(strip=True)
-                        f_match = re.search(r'(\d{2}/\d{2}/\d{4})\s*(\d{2}:\d{2})?', t.replace(" ", ""))
-                        if f_match:
-                            f_f = f_match.group(1)
-                            h_f = f_match.group(2) if f_match.group(2) else "00:00"
-                            fecha_final = f"{f_f} {h_f}"
+                        f_m = re.search(r'(\d{2}/\d{2}/\d{4})\s*(\d{2}:\d{2})?', t.replace(" ", ""))
+                        if f_m:
+                            fecha_final = f"{f_m.group(1)} {f_m.group(2) if f_m.group(2) else '00:00'}"
                             break
 
-                    # 3. BUSCAR LUGAR (Suele ser la celda más larga o la 4ª)
+                    # 4. LUGAR
                     lugar = "Pabellón por confirmar"
-                    potential_places = [td.get_text(strip=True) for td in tds if len(td.get_text(strip=True)) > 12]
-                    if potential_places:
-                        lugar = potential_places[0]
+                    potential = [td.get_text(strip=True) for td in tds if len(td.get_text(strip=True)) > 12]
+                    if potential: lugar = potential[0]
 
                     matches.append({
                         "local": local, "visitante": visitante,
+                        "resultado": resultado,
                         "fecha_texto": fecha_final, "lugar": lugar,
                         "es_casa": (CLUB.lower() in local.lower())
                     })
