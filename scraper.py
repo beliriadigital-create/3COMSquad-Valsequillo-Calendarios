@@ -41,37 +41,67 @@ def main():
         try:
             r = requests.get(url, headers={"User-Agent": UA}, timeout=30)
             soup = BeautifulSoup(r.text, "html.parser")
-            table = soup.find("table")
-            if not table: continue
-
+            
+            # Buscamos todas las filas de la tabla
+            rows = soup.find_all("tr")
             matches = []
-            for tr in table.find_all("tr"):
-                text = tr.get_text()
-                if CLUB in text:
-                    tds = tr.find_all("td")
-                    if len(tds) < 4: continue
-                    
-                    # EXTRACCIÓN DE EQUIPOS MEJORADA
-                    # Buscamos el texto en la segunda columna y separamos por " - " o " VS "
-                    raw_teams = tds[1].get_text(" ", strip=True)
-                    # Limpiamos espacios dobles y saltos
-                    clean_teams = " ".join(raw_teams.split())
-                    # Separar por guion o VS
-                    parts = re.split(r'\s*-\s*|\s+VS\s+|\s+vs\s+', clean_teams, flags=re.IGNORECASE)
-                    
-                    local = parts[0].strip() if len(parts) > 0 else "Equipo Local"
-                    visitante = parts[1].strip() if len(parts) > 1 else "Equipo Visitante"
 
-                    # Limpiar fecha (evitar que se pegue la hora)
-                    raw_f = tds[2].get_text(strip=True)
-                    f_match = re.search(r'(\d{2}/\d{2}/\d{4})(\d{2}:\d{2})', raw_f)
-                    fecha_f = f"{f_match.group(1)} {f_match.group(2)}" if f_match else raw_f
+            for tr in rows:
+                cells = tr.find_all("td")
+                # Si la fila tiene el nombre del club
+                if CLUB.lower() in tr.get_text().lower():
+                    # Intentamos localizar los nombres de los equipos
+                    # En iSquad suelen estar en celdas con enlaces o clases específicas
+                    # Vamos a buscar textos que NO sean la fecha ni el lugar
+                    
+                    equipos_texto = ""
+                    fecha_texto = ""
+                    lugar_texto = ""
+                    
+                    for td in cells:
+                        t = td.get_text(" ", strip=True)
+                        # Si tiene formato de fecha (00/00/0000)
+                        if re.search(r'\d{2}/\d{2}/\d{4}', t):
+                            fecha_texto = t
+                        # Si es una celda con " - " o " VS " es probablemente la de equipos
+                        elif " - " in t or " VS " in t.upper():
+                            equipos_texto = t
+                        # Si es texto largo y no es lo anterior, es el lugar
+                        elif len(t) > 10 and not lugar_texto:
+                            lugar_texto = t
+
+                    # Si no encontramos la celda con " - ", probamos a juntar las celdas de equipos
+                    if not equipos_texto and len(cells) >= 2:
+                        # A veces local y visitante están en celdas separadas
+                        # Buscamos celdas que contengan nombres de clubes (suelen tener enlaces)
+                        potential_teams = [td.get_text(strip=True) for td in cells if len(td.get_text(strip=True)) > 3 and not re.search(r'\d{2}/\d{2}', td.get_text())]
+                        if len(potential_teams) >= 2:
+                            local = potential_teams[0]
+                            visitante = potential_teams[1]
+                        else:
+                            local = "3COM Squad Valsequillo"
+                            visitante = "Rival"
+                    else:
+                        # Limpiamos el texto de equipos
+                        clean_teams = " ".join(equipos_texto.split())
+                        parts = re.split(r'\s*-\s*|\s+VS\s+|\s+vs\s+', clean_teams, flags=re.IGNORECASE)
+                        local = parts[0].strip() if len(parts) > 0 else "Local"
+                        visitante = parts[1].strip() if len(parts) > 1 else "Visitante"
+
+                    # Limpiar la fecha pegada (ej: 18/01/202612:00)
+                    f_match = re.search(r'(\d{2}/\d{2}/\d{4})\s*(\d{2}:\d{2})?', fecha_texto.replace(" ", ""))
+                    if f_match:
+                        fecha_f = f_match.group(1)
+                        hora_f = f_match.group(2) if f_match.group(2) else "00:00"
+                        fecha_final = f"{fecha_f} {hora_f}"
+                    else:
+                        fecha_final = "Fecha por confirmar"
 
                     matches.append({
-                        "local": local, "visitante": visitante,
-                        "fecha_texto": fecha_f,
-                        "lugar": tds[3].get_text(strip=True),
-                        "estado": tds[4].get_text(strip=True) if len(tds)>4 else "Pendiente",
+                        "local": local,
+                        "visitante": visitante,
+                        "fecha_texto": fecha_final,
+                        "lugar": lugar_texto if lugar_texto else "Pabellón por confirmar",
                         "es_casa": (CLUB.lower() in local.lower())
                     })
 
@@ -79,7 +109,9 @@ def main():
             with open(os.path.join(slug, "partidos.json"), "w", encoding="utf-8") as out:
                 json.dump({"categoria": title, "matches": matches}, out, ensure_ascii=False, indent=2)
             create_ics(slug, title, matches)
-        except Exception as e: print(f"Error en {slug}: {e}")
+            print(f"✅ {title}: {len(matches)} partidos encontrados.")
+        except Exception as e:
+            print(f"❌ Error en {slug}: {e}")
 
 if __name__ == "__main__":
     main()
