@@ -48,35 +48,41 @@ def main():
             for tr in rows:
                 if CLUB.lower() in tr.get_text().lower():
                     tds = tr.find_all("td")
-                    if len(tds) < 4: continue
+                    if len(tds) < 3: continue
 
-                    # 1. EQUIPOS (Siempre en la segunda columna o por enlaces)
-                    links = tr.find_all("a", href=re.compile(r'id_equipo|equipo'))
-                    if len(links) >= 2:
-                        local = links[0].get_text(strip=True)
-                        visitante = links[1].get_text(strip=True)
+                    # 1. EQUIPOS: Buscamos los textos de los enlaces <a>
+                    links = tr.find_all("a")
+                    team_names = [a.get_text(strip=True) for a in links if len(a.get_text(strip=True)) > 3 and "id_equipo" in a.get('href', '')]
+                    
+                    if len(team_names) >= 2:
+                        local, visitante = team_names[0], team_names[1]
                     else:
+                        # Fallback si no hay enlaces: usamos la celda 2 y limpiamos
                         txt_eq = tds[1].get_text(" ", strip=True)
                         txt_limpio = re.sub(r'\d+\s*-\s*\d+', ' vs ', txt_eq)
                         parts = re.split(r'\s*-\s*|\s+VS\s+|\s+vs\s+', txt_limpio, flags=re.IGNORECASE)
                         local = parts[0].strip() if len(parts) > 0 else "Local"
                         visitante = parts[1].strip() if len(parts) > 1 else "Visitante"
 
-                    # 2. FECHA (Siempre en la tercera columna)
-                    raw_f = tds[2].get_text(strip=True)
-                    f_m = re.search(r'(\d{2}/\d{2}/\d{4})\s*(\d{2}:\d{2})?', raw_f.replace(" ", ""))
-                    fecha_f = f"{f_m.group(1)} {f_m.group(2) if f_m.group(2) else '00:00'}" if f_m else "Fecha por confirmar"
-
-                    # 3. LUGAR (Siempre en la cuarta columna)
-                    lugar = tds[3].get_text(strip=True) if len(tds) > 3 else "Pabellón por confirmar"
-
-                    # 4. RESULTADO (Buscamos en toda la fila por si acaso)
-                    resultado = ""
+                    # 2. FECHA Y RESULTADO
+                    fecha_f, resultado = "Fecha por confirmar", ""
                     for td in tds:
                         t = td.get_text(strip=True)
+                        # Buscar fecha
+                        f_m = re.search(r'(\d{2}/\d{2}/\d{4})\s*(\d{2}:\d{2})?', t.replace(" ", ""))
+                        if f_m:
+                            fecha_f = f"{f_m.group(1)} {f_m.group(2) if f_m.group(2) else '00:00'}"
+                        # Buscar resultado (N-N)
                         if re.match(r'^\d+\s*-\s*\d+$', t):
                             resultado = t
-                            break
+
+                    # 3. LUGAR: La celda más larga que no sea equipos ni fecha
+                    lugar = "Pabellón por confirmar"
+                    all_texts = [td.get_text(strip=True) for td in tds]
+                    # Filtramos textos que no sean equipos, ni fecha, ni resultado, ni jornada corta
+                    potential_places = [t for t in all_texts if len(t) > 10 and t != local and t != visitante and not re.search(r'\d{2}/\d{2}', t)]
+                    if potential_places:
+                        lugar = potential_places[0]
 
                     matches.append({
                         "local": local, "visitante": visitante,
