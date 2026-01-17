@@ -1,189 +1,95 @@
-<!doctype html>
-<html lang="es">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Calendarios - 3COM Squad Valsequillo</title>
-  <style>
-    :root{
-      --pink:#ff2aa6;
-      --pink2:#ff5cc3;
-      --bg:#0b0b12;
-      --card: rgba(255,255,255,.92);
-      --muted:#6b7280;
-      --shadow: 0 14px 40px rgba(0,0,0,.25);
-      --radius: 18px;
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
-      color:#111827;
-      background:
-        linear-gradient(180deg, rgba(11,11,18,.75), rgba(11,11,18,.90)),
-        url("./assets/bg-pink-sport.png") center/cover no-repeat fixed;
-      min-height:100vh;
-    }
-    .wrap{max-width:1000px;margin:0 auto;padding:18px}
-    
-    /* Cabecera Principal */
-    .header-main{
-      text-align:center;padding:30px 0;color:#fff;
-    }
-    .logo-main{
-      width:100px;height:100px;margin:0 auto 15px;
-      background:#fff;border-radius:20px;padding:8px;
-      box-shadow: 0 10px 30px rgba(255,42,166,.3);
-    }
-    .logo-main img{width:100%;height:100%;object-fit:contain}
-    .header-main h1{margin:0;font-size:1.8rem;font-weight:900;text-transform:uppercase;letter-spacing:1px}
-    
-    /* Sección de Categoría */
-    .cat-section{margin-bottom:50px}
-    .cat-header{
-      display:flex;align-items:center;justify-content:space-between;
-      padding:15px;background:rgba(255,255,255,.1);
-      backdrop-filter:blur(10px);border-radius:var(--radius);
-      border:1px solid rgba(255,255,255,.15);margin-bottom:15px;color:#fff;
-    }
-    .cat-header h2{margin:0;font-size:1.4rem;font-weight:800}
-    
-    .btn-ics{
-      background:linear-gradient(135deg, var(--pink), var(--pink2));
-      color:#fff;text-decoration:none;padding:10px 16px;
-      border-radius:12px;font-weight:800;font-size:.9rem;
-      box-shadow: 0 8px 20px rgba(255,42,166,.3);
-      transition:transform .1s;
-    }
-    .btn-ics:hover{transform:scale(1.03)}
+import json, os, re, requests
+from bs4 import BeautifulSoup
+from datetime import datetime, timedelta
 
-    /* Grid de Partidos */
-    .grid{
-      display:grid;grid-template-columns:1fr;gap:15px;
-    }
-    @media (min-width: 768px){ .grid{grid-template-columns:1fr 1fr} }
+CLUB = "3COM Squad Valsequillo"
+UA = "Mozilla/5.0 (GitHubActions)"
 
-    /* Tarjetas */
-    .card{
-      background:var(--card);border-radius:var(--radius);
-      box-shadow:var(--shadow);position:relative;overflow:hidden;
-      border:1px solid rgba(0,0,0,.05);
-    }
-    .card::before{
-      content:"";position:absolute;left:0;top:0;bottom:0;width:6px;
-      background:rgba(0,0,0,.1);
-    }
-    .card.home::before{background:var(--pink)}
-    .card-inner{padding:15px 15px 15px 20px}
-    
-    .row-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
-    .date{font-weight:900;font-size:1rem;color:#111827}
-    .status{font-size:.85rem;font-weight:700;color:var(--muted)}
-    .badge{
-      font-size:.75rem;font-weight:900;padding:5px 10px;
-      border-radius:20px;background:rgba(0,0,0,.05);
-    }
-    .badge.home{background:rgba(255,42,166,.1);color:var(--pink)}
-    
-    .teams{font-weight:900;font-size:1.1rem;margin:10px 0;line-height:1.3}
-    .vs{color:var(--pink);font-size:.9rem;margin:0 5px}
-    
-    .footer{display:flex;justify-content:space-between;align-items:center;margin-top:10px;font-size:.85rem}
-    .place{font-weight:800;color:#b42318}
-    .score{background:#111827;color:#fff;padding:4px 10px;border-radius:8px;font-weight:900}
+def create_ics(slug, title, matches):
+    ics_content = [
+        "BEGIN:VCALENDAR",
+        "VERSION:2.0",
+        "PRODID:-//3COM Squad Valsequillo//NONSGML v1.0//ES",
+        f"X-WR-CALNAME:{title}",
+        "X-WR-TIMEZONE:Atlantic/Canary",
+        "CALSCALE:GREGORIAN",
+        "METHOD:PUBLISH"
+    ]
+    for m in matches:
+        try:
+            dt = datetime.strptime(m['fecha_texto'], "%d/%m/%Y %H:%M")
+            dt_str = dt.strftime("%Y%m%dT%H%M%S")
+            dt_end = (dt + timedelta(hours=1, minutes=30)).strftime("%Y%m%dT%H%M%S")
+        except: continue
+        uid = f"{slug}-{dt_str}@valsequillo-balonmano"
+        desc = f"Partido de {title}\\n{m['local']} vs {m['visitante']}\\nEstado: {m['estado']}\\nLugar: {m['lugar']}"
+        ics_content.extend([
+            "BEGIN:VEVENT",
+            f"UID:{uid}",
+            f"DTSTAMP:{datetime.now().strftime('%Y%m%dT%H%M%SZ')}",
+            f"DTSTART:{dt_str}",
+            f"DTEND:{dt_end}",
+            f"SUMMARY:{m['local']} vs {m['visitante']}",
+            f"LOCATION:{m['lugar']}",
+            f"DESCRIPTION:{desc}",
+            "STATUS:CONFIRMED",
+            "END:VEVENT"
+        ])
+    ics_content.append("END:VCALENDAR")
+    with open(os.path.join(slug, "calendario.ics"), "w", encoding="utf-8") as f:
+        f.write("\n".join(ics_content))
 
-    .loading{color:#fff;text-align:center;padding:20px;font-weight:700}
-  </style>
-</head>
-<body>
+def main():
+    with open("categories.json", "r", encoding="utf-8") as f:
+        cats = json.load(f)
 
-  <div class="wrap">
-    <header class="header-main">
-      <div class="logo-main">
-        <img src="./assets/LOGO-3COM-SQUAD-2022-1.png" alt="Logo">
-      </div>
-      <h1>Calendarios Oficiales</h1>
-      <p style="color:rgba(255,255,255,.7)">3COM Squad Valsequillo · Temporada 25/26</p>
-    </header>
+    for c in cats:
+        slug, title, url = c["slug"], c["title"], c["url"]
+        r = requests.get(url, headers={"User-Agent": UA}, timeout=30)
+        soup = BeautifulSoup(r.text, "html.parser")
+        table = soup.find("table")
+        if not table: continue
 
-    <div id="master-container">
-      <div class="loading">Cargando todas las categorías...</div>
-    </div>
-  </div>
-
-  <script>
-    const container = document.getElementById('master-container');
-
-    async function loadAll() {
-      try {
-        const res = await fetch('./categories.json');
-        const categories = await res.json();
-        container.innerHTML = '';
-
-        for (const cat of categories) {
-          const section = document.createElement('section');
-          section.className = 'cat-section';
-          
-          // Crear cabecera de sección
-          section.innerHTML = `
-            <div class="cat-header">
-              <h2>${cat.title}</h2>
-              <a href="./${cat.slug}/calendario.ics" class="btn-ics">📅 Suscribirse</a>
-            </div>
-            <div id="grid-${cat.slug}" class="grid"><div class="loading">Cargando partidos...</div></div>
-          `;
-          container.appendChild(section);
-
-          // Cargar partidos de esta categoría
-          fetch(`./${cat.slug}/partidos.json`)
-            .then(r => r.json())
-            .then(data => {
-              const grid = document.getElementById(`grid-${cat.slug}`);
-              grid.innerHTML = '';
-              
-              if (!data.matches || data.matches.length === 0) {
-                grid.innerHTML = '<div class="loading">No hay partidos programados.</div>';
-                return;
-              }
-
-              data.matches.forEach(m => {
-                const isHome = m.es_casa;
-                const scoreMatch = (m.estado || "").match(/(\d+)\s*[-:]\s*(\d+)/);
-                const scoreHtml = scoreMatch ? `<div class="score">${scoreMatch[0]}</div>` : '';
+        matches = []
+        for tr in table.find_all("tr"):
+            if CLUB in tr.get_text():
+                tds = tr.find_all("td")
+                if len(tds) < 4: continue
                 
-                const card = document.createElement('div');
-                card.className = `card ${isHome ? 'home' : ''}`;
-                card.innerHTML = `
-                  <div class="card-inner">
-                    <div class="row-top">
-                      <div>
-                        <div class="date">${m.fecha_texto}</div>
-                        <div class="status">${m.estado || 'Pendiente'}</div>
-                      </div>
-                      <div class="badge ${isHome ? 'home' : ''}">${isHome ? 'CASA' : 'FUERA'}</div>
-                    </div>
-                    <div class="teams">
-                      ${m.local} <span class="vs">vs</span> ${m.visitante}
-                    </div>
-                    <div class="footer">
-                      <div class="place">📍 ${m.lugar}</div>
-                      ${scoreHtml}
-                    </div>
-                  </div>
-                `;
-                grid.appendChild(card);
-              });
-            })
-            .catch(() => {
-              document.getElementById(`grid-${cat.slug}`).innerHTML = '<div class="loading">Pendiente de actualización.</div>';
-            });
-        }
-      } catch (e) {
-        container.innerHTML = '<div class="loading">Error al cargar las categorías.</div>';
-      }
-    }
+                # LIMPIEZA DE EQUIPOS MEJORADA
+                raw_equipos = tds[1].get_text(" ", strip=True)
+                # Quitamos "VS" o "vs" y dividimos por el guion central
+                equipos_clean = re.sub(r'\s+VS\s+', ' - ', raw_equipos, flags=re.IGNORECASE)
+                if " - " in equipos_clean:
+                    parts = equipos_clean.split(" - ")
+                    local = parts[0].strip()
+                    visitante = parts[1].strip() if len(parts) > 1 else ""
+                else:
+                    local = equipos_clean
+                    visitante = ""
 
-    loadAll();
-  </script>
-</body>
-</html>
+                # Limpiar fecha (a veces vienen pegadas)
+                raw_fecha = tds[2].get_text(strip=True)
+                fecha_match = re.search(r'(\d{2}/\d{2}/\d{4})(\d{2}:\d{2})', raw_fecha)
+                if fecha_match:
+                    fecha_final = f"{fecha_match.group(1)} {fecha_match.group(2)}"
+                else:
+                    fecha_final = raw_fecha
+
+                matches.append({
+                    "local": local,
+                    "visitante": visitante,
+                    "fecha_texto": fecha_final,
+                    "lugar": tds[3].get_text(strip=True),
+                    "estado": tds[4].get_text(strip=True) if len(tds) > 4 else "Pendiente",
+                    "es_casa": (CLUB.lower() in local.lower())
+                })
+
+        os.makedirs(slug, exist_ok=True)
+        payload = {"categoria": title, "updated_at": datetime.now().strftime("%d/%m/%Y %H:%M"), "matches": matches}
+        with open(os.path.join(slug, "partidos.json"), "w", encoding="utf-8") as out:
+            json.dump(payload, out, ensure_ascii=False, indent=2)
+        create_ics(slug, title, matches)
+
+if __name__ == "__main__":
+    main()
