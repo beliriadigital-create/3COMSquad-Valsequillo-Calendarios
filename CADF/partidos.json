@@ -1,17 +1,13 @@
 {
-  "club": "3COM Squad Valsequillo",
   "categoria": "Cadete Femenino (2025/26)",
-  "slug": "CADF",
-  "source_url": "https://resultadosbalonmano.isquad.es/competicion.php?id_superficie=1&seleccion=0&id_categoria=2632&id_competicion=209891&id_temp=2526&id_ambito=74&id_territorial=37",
-  "updated_at": "2026-01-17 20:56:02",
   "matches": [
     {
-      "local": "3COM Squad Valsequillo",
-      "visitante": "IDOBRA JUVENTUD LAS PALMAS",
+      "local": "-",
+      "visitante": "",
       "fecha_texto": "",
       "lugar": "PABELLON MUNICIPAL EL MERCADILLO",
       "estado": "Retirado",
-      "es_casa": true
+      "es_casa": false
     }
   ]
 }
