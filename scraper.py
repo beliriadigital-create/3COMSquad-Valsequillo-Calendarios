@@ -46,47 +46,41 @@ def main():
             matches = []
 
             for tr in rows:
-                row_text = tr.get_text().lower()
-                if CLUB.lower() in row_text:
+                if CLUB.lower() in tr.get_text().lower():
                     tds = tr.find_all("td")
                     if len(tds) < 3: continue
 
-                    # --- 1. IDENTIFICAR EQUIPOS POR ENLACES ---
-                    # Buscamos enlaces que lleven a fichas de equipo
-                    team_links = tr.find_all("a", href=re.compile(r'equipo\.php|id_equipo'))
-                    if len(team_links) >= 2:
-                        local = team_links[0].get_text(strip=True)
-                        visitante = team_links[1].get_text(strip=True)
+                    # 1. EQUIPOS (Por enlaces)
+                    links = tr.find_all("a", href=re.compile(r'id_equipo|equipo'))
+                    if len(links) >= 2:
+                        local = links[0].get_text(strip=True)
+                        visitante = links[1].get_text(strip=True)
                     else:
-                        # Si no hay enlaces, buscamos en la celda 2 (índice 1)
                         txt_eq = tds[1].get_text(" ", strip=True)
-                        # Limpiamos posibles marcadores pegados al nombre
                         txt_limpio = re.sub(r'\d+\s*-\s*\d+', ' vs ', txt_eq)
                         parts = re.split(r'\s*-\s*|\s+VS\s+|\s+vs\s+', txt_limpio, flags=re.IGNORECASE)
                         local = parts[0].strip() if len(parts) > 0 else "Local"
                         visitante = parts[1].strip() if len(parts) > 1 else "Visitante"
 
-                    # --- 2. IDENTIFICAR FECHA Y RESULTADO ---
+                    # 2. FECHA Y RESULTADO
                     fecha_f, resultado = "Fecha por confirmar", ""
                     for td in tds:
                         t = td.get_text(strip=True)
-                        # Fecha
                         f_m = re.search(r'(\d{2}/\d{2}/\d{4})', t)
                         if f_m:
                             h_m = re.search(r'(\d{2}:\d{2})', t)
                             fecha_f = f"{f_m.group(1)} {h_m.group(1) if h_m else '00:00'}"
-                        # Resultado (N-N)
                         if re.match(r'^\d+\s*-\s*\d+$', t):
                             resultado = t
 
-                    # --- 3. IDENTIFICAR LUGAR (EL QUE SOBRA) ---
+                    # 3. LUGAR (CON LISTA NEGRA)
                     lugar = "Pabellón por confirmar"
-                    # Buscamos celdas que no sean la de equipos, ni la de fecha, ni la de resultado
                     for td in tds:
                         t = td.get_text(strip=True)
-                        # Si es un texto largo, no tiene fecha, no es el resultado y NO es un equipo
+                        # Si es un texto largo y NO es la fecha ni el resultado
                         if len(t) > 10 and not re.search(r'\d{2}/\d{2}', t) and not re.match(r'^\d+\s*-\s*\d+$', t):
-                            if t.lower() != local.lower() and t.lower() != visitante.lower():
+                            # LISTA NEGRA: Si el texto contiene el nombre de los equipos, NO es el lugar
+                            if local.lower() not in t.lower() and visitante.lower() not in t.lower():
                                 lugar = t
                                 break
 
