@@ -46,45 +46,49 @@ def main():
             matches = []
 
             for tr in rows:
-                if CLUB.lower() in tr.get_text().lower():
+                row_text = tr.get_text().lower()
+                if CLUB.lower() in row_text:
                     tds = tr.find_all("td")
                     if len(tds) < 3: continue
 
-                    # 1. EQUIPOS: Buscamos los enlaces <a> que contienen "id_equipo"
-                    links = tr.find_all("a", href=re.compile(r'id_equipo|equipo'))
-                    if len(links) >= 2:
-                        local = links[0].get_text(strip=True)
-                        visitante = links[1].get_text(strip=True)
+                    # --- 1. IDENTIFICAR EQUIPOS POR ENLACES ---
+                    # Buscamos enlaces que lleven a fichas de equipo
+                    team_links = tr.find_all("a", href=re.compile(r'equipo\.php|id_equipo'))
+                    if len(team_links) >= 2:
+                        local = team_links[0].get_text(strip=True)
+                        visitante = team_links[1].get_text(strip=True)
                     else:
-                        # Si no hay enlaces, usamos la segunda celda pero limpiamos el marcador
+                        # Si no hay enlaces, buscamos en la celda 2 (índice 1)
                         txt_eq = tds[1].get_text(" ", strip=True)
+                        # Limpiamos posibles marcadores pegados al nombre
                         txt_limpio = re.sub(r'\d+\s*-\s*\d+', ' vs ', txt_eq)
                         parts = re.split(r'\s*-\s*|\s+VS\s+|\s+vs\s+', txt_limpio, flags=re.IGNORECASE)
                         local = parts[0].strip() if len(parts) > 0 else "Local"
                         visitante = parts[1].strip() if len(parts) > 1 else "Visitante"
 
-                    # 2. FECHA, RESULTADO Y LUGAR (Por orden de aparición)
-                    fecha_f, resultado, lugar = "Fecha por confirmar", "", "Pabellón por confirmar"
-                    
-                    for i, td in enumerate(tds):
+                    # --- 2. IDENTIFICAR FECHA Y RESULTADO ---
+                    fecha_f, resultado = "Fecha por confirmar", ""
+                    for td in tds:
                         t = td.get_text(strip=True)
-                        
-                        # Si encontramos la fecha...
+                        # Fecha
                         f_m = re.search(r'(\d{2}/\d{2}/\d{4})', t)
                         if f_m:
                             h_m = re.search(r'(\d{2}:\d{2})', t)
                             fecha_f = f"{f_m.group(1)} {h_m.group(1) if h_m else '00:00'}"
-                            
-                            # EL TRUCO: El lugar suele ser la celda JUSTO DESPUÉS de la fecha
-                            if i + 1 < len(tds):
-                                potential_lugar = tds[i+1].get_text(strip=True)
-                                # Si la siguiente celda no es el resultado, es el lugar
-                                if not re.match(r'^\d+\s*-\s*\d+$', potential_lugar) and len(potential_lugar) > 3:
-                                    lugar = potential_lugar
-                        
-                        # Buscar resultado en cualquier celda
+                        # Resultado (N-N)
                         if re.match(r'^\d+\s*-\s*\d+$', t):
                             resultado = t
+
+                    # --- 3. IDENTIFICAR LUGAR (EL QUE SOBRA) ---
+                    lugar = "Pabellón por confirmar"
+                    # Buscamos celdas que no sean la de equipos, ni la de fecha, ni la de resultado
+                    for td in tds:
+                        t = td.get_text(strip=True)
+                        # Si es un texto largo, no tiene fecha, no es el resultado y NO es un equipo
+                        if len(t) > 10 and not re.search(r'\d{2}/\d{2}', t) and not re.match(r'^\d+\s*-\s*\d+$', t):
+                            if t.lower() != local.lower() and t.lower() != visitante.lower():
+                                lugar = t
+                                break
 
                     matches.append({
                         "local": local, "visitante": visitante,
