@@ -2,12 +2,12 @@
   "categoria": "Infantil Femenino (2025/26)",
   "matches": [
     {
-      "local": "",
-      "visitante": "",
+      "local": "3COM Squad Valsequillo",
+      "visitante": "BM. ROCASA VERDE",
       "resultado": "15-45",
       "fecha_texto": "16/01/2026 17:00",
-      "lugar": "PABELLON MUNICIPAL EL MERCADILLO",
-      "es_casa": false
+      "lugar": "VS3COM Squad Valsequillo-BM. ROCASA VERDE",
+      "es_casa": true
     }
   ]
 }
