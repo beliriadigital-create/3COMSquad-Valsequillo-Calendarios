@@ -1,0 +1,17 @@
+{
+  "club": "3COM Squad Valsequillo",
+  "categoria": "Infantil Femenino (2025/26)",
+  "slug": "INFF",
+  "source_url": "https://resultadosbalonmano.isquad.es/competicion.php?id_superficie=1&seleccion=0&id_categoria=2650&id_competicion=209893&id_temp=2526&id_ambito=74&id_territorial=37",
+  "updated_at": "2026-01-17 20:56:03",
+  "matches": [
+    {
+      "local": "3COM Squad Valsequillo",
+      "visitante": "BM. ROCASA VERDE",
+      "fecha_texto": "16/01/2026 17:00",
+      "lugar": "PABELLON MUNICIPAL EL MERCADILLO",
+      "estado": "Finalizado",
+      "es_casa": true
+    }
+  ]
+}
