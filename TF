@@ -1,8 +1,0 @@
-[
-  { ... },
-  {
-    "slug": "juvenil",
-    "title": "Juvenil (2025/26)",
-    "url": "PEGA_AQUI_LA_URL_DE_ESA_CATEGORIA"
-  }
-]
