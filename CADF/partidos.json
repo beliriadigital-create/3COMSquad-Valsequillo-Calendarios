@@ -2,12 +2,12 @@
   "categoria": "Cadete Femenino (2025/26)",
   "matches": [
     {
-      "local": "",
-      "visitante": "",
+      "local": "3COM Squad Valsequillo",
+      "visitante": "IDOBRA JUVENTUD LAS PALMAS",
       "resultado": "",
       "fecha_texto": "Fecha por confirmar",
-      "lugar": "Pabellón por confirmar",
-      "es_casa": false
+      "lugar": "PABELLON MUNICIPAL EL MERCADILLO",
+      "es_casa": true
     }
   ]
 }
