@@ -18,12 +18,12 @@ def create_ics(slug, title, matches):
             dt_str = dt.strftime("%Y%m%dT%H%M%S")
             dt_end = (dt + timedelta(hours=1, minutes=30)).strftime("%Y%m%dT%H%M%S")
             uid = f"{slug}-{dt_str}@valsequillo"
-            summary = f"{m['local']} {m.get('resultado','')} vs {m['visitante']}"
+            res = f" ({m['resultado']})" if m.get('resultado') else ""
             ics_content.extend([
                 "BEGIN:VEVENT", f"UID:{uid}",
                 f"DTSTAMP:{datetime.now().strftime('%Y%m%dT%H%M%SZ')}",
                 f"DTSTART:{dt_str}", f"DTEND:{dt_end}",
-                f"SUMMARY:{summary.replace('  ',' ')}",
+                f"SUMMARY:{m['local']}{res} vs {m['visitante']}",
                 f"LOCATION:{m['lugar']}",
                 f"DESCRIPTION:Partido de {title}", "END:VEVENT"
             ])
@@ -48,47 +48,43 @@ def main():
             for tr in rows:
                 if CLUB.lower() in tr.get_text().lower():
                     tds = tr.find_all("td")
-                    if len(tds) < 3: continue
+                    if len(tds) < 4: continue
 
-                    # 1. EQUIPOS (por enlaces)
+                    # 1. EQUIPOS (Buscamos enlaces en la fila)
                     links = tr.find_all("a", href=re.compile(r'id_equipo|equipo'))
                     if len(links) >= 2:
                         local = links[0].get_text(strip=True)
                         visitante = links[1].get_text(strip=True)
                     else:
-                        text_eq = tds[1].get_text(" ", strip=True)
-                        parts = re.split(r'\s*-\s*|\s+VS\s+', text_eq, flags=re.IGNORECASE)
+                        # Si no hay enlaces, usamos la columna 2 (índice 1)
+                        txt = tds[1].get_text(" ", strip=True)
+                        parts = re.split(r'\s*-\s*|\s+VS\s+', txt, flags=re.IGNORECASE)
                         local = parts[0].strip() if len(parts) > 0 else "Local"
                         visitante = parts[1].strip() if len(parts) > 1 else "Visitante"
 
-                    # 2. RESULTADO (si existe)
+                    # 2. RESULTADO (Solo si hay una celda que sea exactamente "N - N")
                     resultado = ""
-                    # Buscamos una celda que tenga el formato "Número - Número"
                     for td in tds:
                         t = td.get_text(strip=True)
                         if re.match(r'^\d+\s*-\s*\d+$', t):
                             resultado = t
                             break
 
-                    # 3. FECHA
-                    fecha_final = "Fecha por confirmar"
-                    for td in tds:
-                        t = td.get_text(strip=True)
-                        f_m = re.search(r'(\d{2}/\d{2}/\d{4})\s*(\d{2}:\d{2})?', t.replace(" ", ""))
-                        if f_m:
-                            fecha_final = f"{f_m.group(1)} {f_m.group(2) if f_m.group(2) else '00:00'}"
-                            break
+                    # 3. FECHA (Columna 3 / índice 2)
+                    raw_f = tds[2].get_text(strip=True)
+                    f_m = re.search(r'(\d{2}/\d{2}/\d{4})\s*(\d{2}:\d{2})?', raw_f.replace(" ", ""))
+                    fecha_f = f"{f_m.group(1)} {f_m.group(2) if f_m.group(2) else '00:00'}" if f_m else "Fecha por confirmar"
 
-                    # 4. LUGAR
-                    lugar = "Pabellón por confirmar"
-                    potential = [td.get_text(strip=True) for td in tds if len(td.get_text(strip=True)) > 12]
-                    if potential: lugar = potential[0]
+                    # 4. LUGAR (Columna 4 / índice 3)
+                    lugar = tds[3].get_text(strip=True) if len(tds) > 3 else "Pabellón por confirmar"
+                    # Si el lugar es muy corto (menos de 5 letras), probablemente es un error, buscamos en la siguiente
+                    if len(lugar) < 5 and len(tds) > 4:
+                        lugar = tds[4].get_text(strip=True)
 
                     matches.append({
                         "local": local, "visitante": visitante,
-                        "resultado": resultado,
-                        "fecha_texto": fecha_final, "lugar": lugar,
-                        "es_casa": (CLUB.lower() in local.lower())
+                        "resultado": resultado, "fecha_texto": fecha_f,
+                        "lugar": lugar, "es_casa": (CLUB.lower() in local.lower())
                     })
 
             os.makedirs(slug, exist_ok=True)
