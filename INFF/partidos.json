@@ -1,10 +1,11 @@
 {
   "categoria": "Infantil Femenino (2025/26)",
+  "updated_at": "17/01/2026 21:34",
   "matches": [
     {
-      "local": "15-45",
-      "visitante": "",
-      "fecha_texto": "16/01/202617:00",
+      "local": "15",
+      "visitante": "45",
+      "fecha_texto": "16/01/2026 17:00",
       "lugar": "PABELLON MUNICIPAL EL MERCADILLO",
       "estado": "Finalizado",
       "es_casa": false
