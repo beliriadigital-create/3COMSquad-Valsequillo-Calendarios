@@ -4,58 +4,343 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Calendario - 3COM Squad Valsequillo</title>
+
   <style>
-    body{font-family:system-ui,Arial;margin:20px;background:#f0f2f5}
-    .match{background:#fff;padding:15px;border-radius:10px;margin-bottom:12px;border-left:6px solid #1976d2;box-shadow:0 2px 4px rgba(0,0,0,0.05)}
-    .home{border-left-color:#2e7d32}
-    .fecha{color:#666;font-size:0.9rem;font-weight:bold}
-    .lugar{color:#d32f2f;font-size:0.85rem;margin-top:5px}
-    .btn-volver{display:inline-block;margin-bottom:16px;text-decoration:none;color:#1976d2;font-weight:bold}
-    .btn-calendar{background:#2e7d32;color:white;padding:12px 20px;text-decoration:none;border-radius:8px;font-weight:bold;display:inline-block;margin-bottom:20px}
-    .btn-calendar:hover{background:#1b5e20}
+    :root{
+      --pink:#ff2aa6;
+      --pink2:#ff5cc3;
+      --bg:#0b0b12;
+      --card: rgba(255,255,255,.92);
+      --muted:#6b7280;
+      --shadow: 0 14px 40px rgba(0,0,0,.25);
+      --radius: 18px;
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
+      color:#111827;
+      background:
+        linear-gradient(180deg, rgba(11,11,18,.70), rgba(11,11,18,.88)),
+        url("../assets/bg-pink-sport.png") center/cover no-repeat fixed;
+      min-height:100vh;
+    }
+
+    .wrap{max-width:980px;margin:0 auto;padding:18px}
+
+    .topbar{
+      display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+      padding:14px 14px 10px 14px;
+      border-radius: var(--radius);
+      background: rgba(255,255,255,.10);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 10px 30px rgba(0,0,0,.20);
+      border: 1px solid rgba(255,255,255,.18);
+    }
+
+    .logo{
+      width:72px;height:72px;flex:0 0 auto;
+      border-radius: 16px;
+      background: rgba(255,255,255,.85);
+      display:grid;place-items:center;
+      box-shadow: 0 10px 24px rgba(0,0,0,.18);
+      overflow:hidden;
+    }
+    .logo img{width:92%;height:92%;object-fit:contain}
+
+    .titles{color:#fff}
+    .titles .club{font-weight:800;letter-spacing:.2px;font-size:1.05rem}
+    .titles .cat{font-weight:750;font-size:1.35rem;line-height:1.15;margin-top:3px}
+    .titles .meta{color:rgba(255,255,255,.78);font-size:.9rem;margin-top:6px}
+
+    .actions{
+      margin-left:auto;
+      display:flex;gap:10px;flex-wrap:wrap;align-items:center;
+    }
+
+    .btn{
+      display:inline-flex;align-items:center;gap:10px;
+      padding:11px 14px;border-radius:14px;
+      text-decoration:none;font-weight:800;
+      border:1px solid rgba(255,255,255,.22);
+      background: rgba(255,255,255,.12);
+      color:#fff;
+      transition: transform .08s ease, background .2s ease, border-color .2s ease;
+      user-select:none;
+    }
+    .btn:hover{transform: translateY(-1px); background: rgba(255,255,255,.18); border-color: rgba(255,255,255,.32)}
+    .btn.primary{
+      background: linear-gradient(135deg, var(--pink), var(--pink2));
+      border-color: rgba(255,255,255,.25);
+      box-shadow: 0 14px 30px rgba(255,42,166,.25);
+    }
+    .btn.primary:hover{background: linear-gradient(135deg, #ff169a, #ff4fbc)}
+
+    .panel{
+      margin-top:14px;
+      border-radius: var(--radius);
+      background: rgba(255,255,255,.10);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,.18);
+      box-shadow: 0 10px 30px rgba(0,0,0,.18);
+      padding:14px;
+      color:#fff;
+    }
+    .next{
+      display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between;
+    }
+    .pill{
+      display:inline-flex;align-items:center;gap:10px;
+      padding:10px 12px;border-radius:999px;
+      background: rgba(0,0,0,.25);
+      border: 1px solid rgba(255,255,255,.18);
+      color:#fff;
+      font-weight:800;
+    }
+    .pill small{font-weight:700;color:rgba(255,255,255,.78)}
+    .legend{display:flex;gap:10px;flex-wrap:wrap}
+    .tag{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:8px 10px;border-radius:999px;
+      background: rgba(0,0,0,.18);
+      border: 1px solid rgba(255,255,255,.14);
+      color:rgba(255,255,255,.92);
+      font-weight:750;font-size:.9rem;
+    }
+    .dot{width:10px;height:10px;border-radius:999px;display:inline-block}
+    .dot.home{background: var(--pink)}
+    .dot.away{background: rgba(255,255,255,.65)}
+
+    .grid{
+      margin-top:14px;
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:12px;
+    }
+    @media (min-width: 860px){
+      .grid{grid-template-columns: 1fr 1fr;}
+    }
+
+    .card{
+      background: var(--card);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      border: 1px solid rgba(17,24,39,.08);
+      position:relative;
+    }
+    .card::before{
+      content:"";
+      position:absolute;left:0;top:0;bottom:0;width:8px;
+      background: rgba(17,24,39,.15);
+    }
+    .card.home::before{background: linear-gradient(180deg, var(--pink), #ff86d6)}
+    .card.away::before{background: linear-gradient(180deg, rgba(17,24,39,.35), rgba(17,24,39,.12))}
+    .card-inner{padding:14px 14px 12px 18px}
+
+    .row1{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+    .when{
+      font-weight:900;
+      font-size:1.02rem;
+      color:#111827;
+    }
+    .sub{
+      margin-top:4px;
+      color:var(--muted);
+      font-weight:700;
+      font-size:.92rem;
+    }
+    .badge{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:8px 10px;border-radius:999px;
+      font-weight:900;font-size:.85rem;
+      background: rgba(17,24,39,.06);
+      color:#111827;
+      border: 1px solid rgba(17,24,39,.08);
+      white-space:nowrap;
+    }
+    .badge.home{background: rgba(255,42,166,.10); border-color: rgba(255,42,166,.18)}
+    .teams{
+      margin-top:12px;
+      font-weight:950;
+      letter-spacing:.1px;
+      font-size:1.05rem;
+      line-height:1.25;
+    }
+    .teams .vs{color:rgba(17,24,39,.55);font-weight:900}
+    .footer{
+      margin-top:12px;
+      display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+    }
+    .place{color:#b42318;font-weight:850}
+    .state{color:#374151;font-weight:850}
+    .score{
+      margin-left:auto;
+      padding:8px 10px;border-radius:12px;
+      background: rgba(17,24,39,.06);
+      border:1px solid rgba(17,24,39,.08);
+      font-weight:950;
+      min-width:84px;
+      text-align:center;
+    }
+
+    .hint{
+      margin-top:10px;
+      color: rgba(255,255,255,.82);
+      font-weight:700;
+      font-size:.92rem;
+    }
+    code{background:rgba(0,0,0,.25);padding:2px 6px;border-radius:8px;border:1px solid rgba(255,255,255,.12);color:#fff}
   </style>
 </head>
+
 <body>
-  <a href="../" class="btn-volver">← Volver</a>
-  <h1 id="titulo">Cargando...</h1>
-  
-  <div style="margin-bottom: 20px;">
-    <a href="./calendario.ics" class="btn-calendar">
-      📅 Añadir a mi Calendario (Móvil/Google)
-    </a>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="logo">
+        <img src="../assets/LOGO-3COM-SQUAD-2022-1.png" alt="3COM Squad Valsequillo" />
+      </div>
+
+      <div class="titles">
+        <div class="club">3COM Squad Valsequillo</div>
+        <div class="cat" id="titulo">Cargando…</div>
+        <div class="meta" id="updated"></div>
+      </div>
+
+      <div class="actions">
+        <a class="btn" href="../">← Inicio</a>
+        <a class="btn primary" href="./calendario.ics">📅 Añadir al calendario</a>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="next">
+        <div class="pill" id="nextpill">
+          ⏱ <span id="nexttext">Buscando próximo partido…</span>
+        </div>
+        <div class="legend">
+          <span class="tag"><span class="dot home"></span> Casa</span>
+          <span class="tag"><span class="dot away"></span> Fuera</span>
+        </div>
+      </div>
+      <div class="hint">
+        Si el botón de calendario no descarga nada, ejecuta el robot en <code>Actions → Actualizar Calendarios</code>.
+      </div>
+    </div>
+
+    <div class="grid" id="lista"></div>
   </div>
 
-  <div id="lista">Cargando partidos...</div>
-
   <script>
+    function parseFecha(fechaTexto){
+      // Espera "dd/mm/yyyy hh:mm"
+      const m = (fechaTexto || "").match(/(\d{2})\/(\d{2})\/(\d{4}).*?(\d{2}):(\d{2})/);
+      if(!m) return null;
+      const dd = parseInt(m[1],10);
+      const mm = parseInt(m[2],10) - 1;
+      const yyyy = parseInt(m[3],10);
+      const HH = parseInt(m[4],10);
+      const MI = parseInt(m[5],10);
+      return new Date(yyyy, mm, dd, HH, MI, 0);
+    }
+
+    function fmtCountdown(ms){
+      const s = Math.floor(ms/1000);
+      const d = Math.floor(s/86400);
+      const h = Math.floor((s%86400)/3600);
+      const m = Math.floor((s%3600)/60);
+      if (d > 0) return `${d}d ${h}h`;
+      if (h > 0) return `${h}h ${m}m`;
+      return `${m}m`;
+    }
+
+    function getScore(m){
+      // Intento genérico: si el robot en el futuro mete resultado en "estado", lo mostramos.
+      const st = (m.estado || "").trim();
+      // Ejemplos que capturamos: "25-21", "25 - 21", "25:21"
+      const mm = st.match(/(\d{1,3})\s*[-:]\s*(\d{1,3})/);
+      if(mm) return `${mm[1]} - ${mm[2]}`;
+      return "";
+    }
+
     fetch('./partidos.json')
       .then(r => r.json())
       .then(data => {
         document.getElementById('titulo').textContent = data.categoria || 'Calendario';
+        document.getElementById('updated').textContent =
+          data.updated_at ? `Actualizado: ${data.updated_at}` : '';
+
         const lista = document.getElementById('lista');
         lista.innerHTML = '';
-        const matches = data.matches || [];
-        if (matches.length === 0) { 
-          lista.innerHTML = '<p>No se encontraron partidos.</p>'; 
-          return; 
+
+        const matches = (data.matches || []).map(m => {
+          const dt = parseFecha(m.fecha_texto);
+          return {...m, _dt: dt};
+        });
+
+        // Ordenar: por fecha (los sin fecha al final)
+        matches.sort((a,b) => {
+          const ta = a._dt ? a._dt.getTime() : 9e15;
+          const tb = b._dt ? b._dt.getTime() : 9e15;
+          return ta - tb;
+        });
+
+        // Próximo partido (>= ahora)
+        const now = new Date();
+        const next = matches.find(m => m._dt && m._dt.getTime() >= now.getTime());
+
+        const nextTextEl = document.getElementById('nexttext');
+        if(next){
+          const diff = next._dt.getTime() - now.getTime();
+          const when = next.fecha_texto || '';
+          nextTextEl.textContent = `Próximo partido en ${fmtCountdown(diff)} · ${when}`;
+        } else {
+          nextTextEl.textContent = 'No hay próximos partidos con fecha detectada.';
         }
+
+        if(matches.length === 0){
+          lista.innerHTML = '<div style="color:white;font-weight:800">No se encontraron partidos.</div>';
+          return;
+        }
+
         matches.forEach(m => {
-          const div = document.createElement('div');
-          div.className = 'match ' + (m.es_casa ? 'home' : '');
-          div.innerHTML = `
-            <div class="fecha">${m.fecha_texto || ''}</div>
-            <div><strong>${m.local || ''}</strong> vs <strong>${m.visitante || ''}</strong></div>
-            <div class="lugar">📍 ${m.lugar || ''}</div>
-            <div style="font-size:0.8rem; color:blue; margin-top:6px">
-              ${m.es_casa ? '🏠 JUGAMOS EN CASA' : '✈️ VISITANTE'}
+          const card = document.createElement('div');
+          const home = !!m.es_casa;
+          card.className = `card ${home ? 'home' : 'away'}`;
+
+          const score = getScore(m);
+          const badgeTxt = home ? '🏠 CASA' : '✈️ FUERA';
+
+          card.innerHTML = `
+            <div class="card-inner">
+              <div class="row1">
+                <div>
+                  <div class="when">${m.fecha_texto || 'Fecha por confirmar'}</div>
+                  <div class="sub">${m.estado ? m.estado : 'Pendiente'}</div>
+                </div>
+                <div class="badge ${home ? 'home' : ''}">${badgeTxt}</div>
+              </div>
+
+              <div class="teams">
+                <div>${m.local || ''}</div>
+                <div class="vs">vs</div>
+                <div>${m.visitante || ''}</div>
+              </div>
+
+              <div class="footer">
+                <div class="place">📍 ${m.lugar || ''}</div>
+                <div class="state">${m.es_casa ? 'Jugamos en casa' : 'Visitante'}</div>
+                ${score ? `<div class="score">${score}</div>` : `<div class="score" style="opacity:.35">—</div>`}
+              </div>
             </div>
           `;
-          lista.appendChild(div);
+          lista.appendChild(card);
         });
       })
       .catch(() => {
         document.getElementById('lista').innerHTML =
-          '<p>Todavía no hay datos. Ejecuta el robot en Actions → Actualizar Calendarios.</p>';
+          '<div style="color:white;font-weight:800">Error cargando datos. Revisa que exista <code>partidos.json</code> en esta carpeta.</div>';
       });
   </script>
 </body>
