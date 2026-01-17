@@ -11,11 +11,20 @@
     .fecha{color:#666;font-size:0.9rem;font-weight:bold}
     .lugar{color:#d32f2f;font-size:0.85rem;margin-top:5px}
     .btn-volver{display:inline-block;margin-bottom:16px;text-decoration:none;color:#1976d2;font-weight:bold}
+    .btn-calendar{background:#2e7d32;color:white;padding:12px 20px;text-decoration:none;border-radius:8px;font-weight:bold;display:inline-block;margin-bottom:20px}
+    .btn-calendar:hover{background:#1b5e20}
   </style>
 </head>
 <body>
   <a href="../" class="btn-volver">← Volver</a>
   <h1 id="titulo">Cargando...</h1>
+  
+  <div style="margin-bottom: 20px;">
+    <a href="./calendario.ics" class="btn-calendar">
+      📅 Añadir a mi Calendario (Móvil/Google)
+    </a>
+  </div>
+
   <div id="lista">Cargando partidos...</div>
 
   <script>
@@ -26,7 +35,10 @@
         const lista = document.getElementById('lista');
         lista.innerHTML = '';
         const matches = data.matches || [];
-        if (matches.length === 0) { lista.innerHTML = '<p>No se encontraron partidos.</p>'; return; }
+        if (matches.length === 0) { 
+          lista.innerHTML = '<p>No se encontraron partidos.</p>'; 
+          return; 
+        }
         matches.forEach(m => {
           const div = document.createElement('div');
           div.className = 'match ' + (m.es_casa ? 'home' : '');
