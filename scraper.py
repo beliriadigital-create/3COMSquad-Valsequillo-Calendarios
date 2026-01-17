@@ -50,14 +50,12 @@ def main():
                     tds = tr.find_all("td")
                     if len(tds) < 3: continue
 
-                    # 1. EQUIPOS: Buscamos los textos de los enlaces <a>
-                    links = tr.find_all("a")
-                    team_names = [a.get_text(strip=True) for a in links if len(a.get_text(strip=True)) > 3 and "id_equipo" in a.get('href', '')]
-                    
-                    if len(team_names) >= 2:
-                        local, visitante = team_names[0], team_names[1]
+                    # 1. EQUIPOS (Por enlaces)
+                    links = tr.find_all("a", href=re.compile(r'id_equipo|equipo'))
+                    if len(links) >= 2:
+                        local = links[0].get_text(strip=True)
+                        visitante = links[1].get_text(strip=True)
                     else:
-                        # Fallback si no hay enlaces: usamos la celda 2 y limpiamos
                         txt_eq = tds[1].get_text(" ", strip=True)
                         txt_limpio = re.sub(r'\d+\s*-\s*\d+', ' vs ', txt_eq)
                         parts = re.split(r'\s*-\s*|\s+VS\s+|\s+vs\s+', txt_limpio, flags=re.IGNORECASE)
@@ -68,19 +66,24 @@ def main():
                     fecha_f, resultado = "Fecha por confirmar", ""
                     for td in tds:
                         t = td.get_text(strip=True)
-                        # Buscar fecha
                         f_m = re.search(r'(\d{2}/\d{2}/\d{4})\s*(\d{2}:\d{2})?', t.replace(" ", ""))
                         if f_m:
                             fecha_f = f"{f_m.group(1)} {f_m.group(2) if f_m.group(2) else '00:00'}"
-                        # Buscar resultado (N-N)
                         if re.match(r'^\d+\s*-\s*\d+$', t):
                             resultado = t
 
-                    # 3. LUGAR: La celda más larga que no sea equipos ni fecha
+                    # 3. LUGAR (Buscador con filtro de exclusión)
                     lugar = "Pabellón por confirmar"
                     all_texts = [td.get_text(strip=True) for td in tds]
-                    # Filtramos textos que no sean equipos, ni fecha, ni resultado, ni jornada corta
-                    potential_places = [t for t in all_texts if len(t) > 10 and t != local and t != visitante and not re.search(r'\d{2}/\d{2}', t)]
+                    # Filtramos: texto largo, que no tenga fecha, y que NO sea igual a los nombres de los equipos
+                    potential_places = [
+                        t for t in all_texts 
+                        if len(t) > 10 
+                        and not re.search(r'\d{2}/\d{2}', t) 
+                        and t.lower() != local.lower() 
+                        and t.lower() != visitante.lower()
+                        and "jornada" not in t.lower()
+                    ]
                     if potential_places:
                         lugar = potential_places[0]
 
