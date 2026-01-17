@@ -50,42 +50,41 @@ def main():
                     tds = tr.find_all("td")
                     if len(tds) < 3: continue
 
-                    # 1. EQUIPOS (Por enlaces)
+                    # 1. EQUIPOS: Buscamos los enlaces <a> que contienen "id_equipo"
                     links = tr.find_all("a", href=re.compile(r'id_equipo|equipo'))
                     if len(links) >= 2:
                         local = links[0].get_text(strip=True)
                         visitante = links[1].get_text(strip=True)
                     else:
+                        # Si no hay enlaces, usamos la segunda celda pero limpiamos el marcador
                         txt_eq = tds[1].get_text(" ", strip=True)
                         txt_limpio = re.sub(r'\d+\s*-\s*\d+', ' vs ', txt_eq)
                         parts = re.split(r'\s*-\s*|\s+VS\s+|\s+vs\s+', txt_limpio, flags=re.IGNORECASE)
                         local = parts[0].strip() if len(parts) > 0 else "Local"
                         visitante = parts[1].strip() if len(parts) > 1 else "Visitante"
 
-                    # 2. FECHA Y RESULTADO
-                    fecha_f, resultado = "Fecha por confirmar", ""
-                    for td in tds:
+                    # 2. FECHA, RESULTADO Y LUGAR (Por orden de aparición)
+                    fecha_f, resultado, lugar = "Fecha por confirmar", "", "Pabellón por confirmar"
+                    
+                    for i, td in enumerate(tds):
                         t = td.get_text(strip=True)
-                        f_m = re.search(r'(\d{2}/\d{2}/\d{4})\s*(\d{2}:\d{2})?', t.replace(" ", ""))
+                        
+                        # Si encontramos la fecha...
+                        f_m = re.search(r'(\d{2}/\d{2}/\d{4})', t)
                         if f_m:
-                            fecha_f = f"{f_m.group(1)} {f_m.group(2) if f_m.group(2) else '00:00'}"
+                            h_m = re.search(r'(\d{2}:\d{2})', t)
+                            fecha_f = f"{f_m.group(1)} {h_m.group(1) if h_m else '00:00'}"
+                            
+                            # EL TRUCO: El lugar suele ser la celda JUSTO DESPUÉS de la fecha
+                            if i + 1 < len(tds):
+                                potential_lugar = tds[i+1].get_text(strip=True)
+                                # Si la siguiente celda no es el resultado, es el lugar
+                                if not re.match(r'^\d+\s*-\s*\d+$', potential_lugar) and len(potential_lugar) > 3:
+                                    lugar = potential_lugar
+                        
+                        # Buscar resultado en cualquier celda
                         if re.match(r'^\d+\s*-\s*\d+$', t):
                             resultado = t
-
-                    # 3. LUGAR (Buscador con filtro de exclusión)
-                    lugar = "Pabellón por confirmar"
-                    all_texts = [td.get_text(strip=True) for td in tds]
-                    # Filtramos: texto largo, que no tenga fecha, y que NO sea igual a los nombres de los equipos
-                    potential_places = [
-                        t for t in all_texts 
-                        if len(t) > 10 
-                        and not re.search(r'\d{2}/\d{2}', t) 
-                        and t.lower() != local.lower() 
-                        and t.lower() != visitante.lower()
-                        and "jornada" not in t.lower()
-                    ]
-                    if potential_places:
-                        lugar = potential_places[0]
 
                     matches.append({
                         "local": local, "visitante": visitante,
