@@ -1,4 +1,12 @@
 {
   "categoria": "Juvenil Femenino (2025/26)",
-  "matches": []
+  "matches": [
+    {
+      "local": "VS 3COM SQUAD VALSEQUILLO",
+      "visitante": "ROMADE",
+      "fecha_texto": "Fecha por confirmar",
+      "lugar": "PABELLON MUNICIPAL EL MERCADILLO",
+      "es_casa": true
+    }
+  ]
 }

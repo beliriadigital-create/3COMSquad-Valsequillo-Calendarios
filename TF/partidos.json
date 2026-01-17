@@ -2,12 +2,11 @@
   "categoria": "Liga Territorial Femenina (2025/26)",
   "matches": [
     {
-      "local": "",
-      "visitante": "",
+      "local": "VS 3COM Squad Valsequillo",
+      "visitante": "CLUB DEPORTIVO CIUDAD DE PUERTO",
       "fecha_texto": "18/01/2026 12:00",
       "lugar": "PABELLON MUNICIPAL EL MERCADILLO",
-      "estado": "Pendiente",
-      "es_casa": false
+      "es_casa": true
     }
   ]
 }
