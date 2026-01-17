@@ -20,10 +20,17 @@
         }
         .card-top::before { content: "PRÓXIMO PARTIDO / JORNADA"; position: absolute; top: -12px; left: 20px; background: var(--accent); padding: 4px 12px; border-radius: 5px; font-size: 0.7rem; font-weight: 700; }
 
-        /* GRILLA HORIZONTAL (RESTO) */
-        #grilla { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; }
+        /* GRILLA HORIZONTAL (RESTO) - ARREGLADO */
+        #grilla { 
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
         .card-mini { 
-            background: white; border-radius: 15px; padding: 20px; width: 280px;
+            background: white; border-radius: 15px; padding: 20px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.05); display: flex; flex-direction: column;
             border-top: 4px solid var(--primary);
         }
@@ -37,6 +44,13 @@
         .btn-ics { display: inline-block; background: var(--primary); color: white; text-decoration: none; padding: 12px 25px; border-radius: 50px; font-weight: 700; margin-top: 20px; transition: 0.3s; }
         .btn-ics:hover { transform: scale(1.05); background: #003d75; }
         .back { text-decoration: none; color: var(--primary); font-size: 0.9rem; font-weight: 700; }
+        
+        /* En móvil, vuelven a ser verticales */
+        @media (max-width: 768px) {
+            #grilla { 
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
@@ -48,7 +62,7 @@
         <a href="calendario.ics" class="btn-ics">📅 AÑADIR AL MÓVIL (.ICS)</a>
     </div>
 
-    <h2 style="text-align:center; color:#666; font-size:1rem; text-transform:uppercase;">Otros Partidos</h2>
+    <h2 style="text-align:center; color:#666; font-size:1rem; text-transform:uppercase; margin-bottom: 30px;">Otros Partidos</h2>
     <div id="grilla"></div>
 
     <script>
