@@ -1,22 +1,8 @@
 [
   {
+    "name": "Liga Territorial Femenina",
     "slug": "TF",
-    "title": "Liga Territorial Femenina (2025/26)",
-    "url": "https://resultadosbalonmano.isquad.es/competicion.php?id_superficie=1&seleccion=0&id_categoria=2660&id_temp=2526&id_ambito=20&id_territorial=37"
-  },
-  {
-    "slug": "JUVF",
-    "title": "Juvenil Femenino (2025/26)",
-    "url": "https://resultadosbalonmano.isquad.es/competicion.php?id_superficie=1&seleccion=0&id_categoria=2631&id_competicion=210419&id_temp=2526&id_ambito=74&id_territorial=37"
-  },
-  {
-    "slug": "CADF",
-    "title": "Cadete Femenino (2025/26)",
-    "url": "https://resultadosbalonmano.isquad.es/competicion.php?id_superficie=1&seleccion=0&id_categoria=2632&id_competicion=209891&id_temp=2526&id_ambito=74&id_territorial=37"
-  },
-  {
-    "slug": "INFF",
-    "title": "Infantil Femenino (2025/26)",
-    "url": "https://resultadosbalonmano.isquad.es/competicion.php?id_superficie=1&seleccion=0&id_categoria=2650&id_competicion=209893&id_temp=2526&id_ambito=74&id_territorial=37"
+    "url": "https://resultadosbalonmano.isquad.es/competicion.php?id_superficie=1&seleccion=0&id_categoria=2660&id_temp=2526&id_ambito=20&id_territorial=37",
+    "club": "3COM Squad Valsequillo"
   }
 ]
