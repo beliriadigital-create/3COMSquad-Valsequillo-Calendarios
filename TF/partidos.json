@@ -1,13 +1,8 @@
-{
-  "categoria": "Liga Territorial Femenina (2025/26)",
-  "matches": [
-    {
-      "local": "3COM Squad Valsequillo",
-      "visitante": "CLUB DEPORTIVO CIUDAD DE PUERTO",
-      "resultado": "40 - 17",
-      "fecha_texto": "18/01/2026 12:00",
-      "lugar": "PABELLON MUNICIPAL EL MERCADILLO",
-      "es_casa": true
-    }
-  ]
-}
+[
+  {
+    "name": "Liga Territorial Femenina",
+    "slug": "TF",
+    "url": "https://resultadosbalonmano.isquad.es/competicion.php?id_superficie=1&seleccion=0&id_categoria=2660&id_temp=2526&id_ambito=20&id_territorial=37",
+    "club": "3COM Squad Valsequillo"
+  }
+]
