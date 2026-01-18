@@ -10,7 +10,7 @@
         body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; padding: 20px; color: #1a1a1a; }
         .header { text-align: center; margin-bottom: 40px; }
         h1 { color: var(--primary); font-weight: 900; text-transform: uppercase; letter-spacing: -1px; }
-        #destacado { margin-bottom: 40px; display: flex; justify-content: center; width: 100%; }
+        #destacado { margin-bottom: 40px; display: flex; justify-content: center; width: 100%; min-height: 100px; }
         .card-top { 
             background: white; border-radius: 20px; padding: 30px; width: 100%; max-width: 800px;
             box-shadow: 0 10px 30px rgba(0,82,155,0.15); border-left: 8px solid var(--accent);
@@ -40,36 +40,36 @@
     <div id="grilla"></div>
 
     <script>
-        fetch('partidos.json')
-            .then(res => res.json())
-            .then(data => {
+        // Función para cargar los datos
+        async function cargarPartidos() {
+            try {
+                const response = await fetch('partidos.json');
+                const data = await response.json();
+                
                 document.getElementById('titulo-cat').innerText = data.categoria;
                 const destacadoDiv = document.getElementById('destacado');
                 const grillaDiv = document.getElementById('grilla');
                 const tituloOtros = document.getElementById('titulo-otros');
 
-                // Función de ordenación mejorada
-                const partidos = data.matches.sort((a, b) => {
-                    const parse = (s) => {
-                        if(!s || !s.includes('/')) return new Date(9999,0,1);
-                        const [d, h] = s.split(' ');
-                        const [day, month, year] = d.split('/');
-                        return new Date(`${year}-${month}-${day}T${h || '00:00'}`);
-                    };
-                    return parse(a.fecha_texto) - parse(b.fecha_texto);
-                });
+                if (!data.matches || data.matches.length === 0) {
+                    destacadoDiv.innerHTML = "<p>No hay partidos programados.</p>";
+                    return;
+                }
 
-                partidos.forEach((m, index) => {
+                // Pintar los partidos
+                data.matches.forEach((m, index) => {
                     const html = `
                         <span class="fecha">🗓️ ${m.fecha_texto}</span>
                         <div class="equipos">${m.local} <br><span class="vs">VS</span><br> ${m.visitante}</div>
                         ${m.resultado ? `<div class="resultado">${m.resultado}</div>` : ''}
                         <div class="lugar">📍 ${m.lugar}</div>
                     `;
+
                     if (index === 0) {
                         const div = document.createElement('div');
                         div.className = 'card-top';
                         div.innerHTML = html;
+                        destacadoDiv.innerHTML = ''; // Limpiar el cargando
                         destacadoDiv.appendChild(div);
                     } else {
                         tituloOtros.style.display = 'block';
@@ -79,7 +79,14 @@
                         grillaDiv.appendChild(div);
                     }
                 });
-            });
+            } catch (error) {
+                console.error("Error cargando partidos:", error);
+                document.getElementById('titulo-cat').innerText = "Error al cargar datos";
+            }
+        }
+
+        // Ejecutar la función
+        cargarPartidos();
     </script>
 </body>
 </html>
