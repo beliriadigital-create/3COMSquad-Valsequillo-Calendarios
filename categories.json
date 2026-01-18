@@ -4,5 +4,23 @@
     "slug": "TF",
     "url": "https://resultadosbalonmano.isquad.es/competicion.php?id_superficie=1&seleccion=0&id_categoria=2660&id_temp=2526&id_ambito=20&id_territorial=37",
     "club": "3COM Squad Valsequillo"
+  },
+  {
+    "name": "Juvenil Femenino",
+    "slug": "JUVF",
+    "url": "https://resultadosbalonmano.isquad.es/competicion.php?id_superficie=1&seleccion=0&id_categoria=2661&id_temp=2526&id_ambito=20&id_territorial=37",
+    "club": "3COM Squad Valsequillo"
+  },
+  {
+    "name": "Cadete Femenino",
+    "slug": "CADF",
+    "url": "https://resultadosbalonmano.isquad.es/competicion.php?id_superficie=1&seleccion=0&id_categoria=2662&id_temp=2526&id_ambito=20&id_territorial=37",
+    "club": "3COM Squad Valsequillo"
+  },
+  {
+    "name": "Infantil Femenino",
+    "slug": "INFF",
+    "url": "https://resultadosbalonmano.isquad.es/competicion.php?id_superficie=1&seleccion=0&id_categoria=2663&id_temp=2526&id_ambito=20&id_territorial=37",
+    "club": "3COM Squad Valsequillo"
   }
 ]
