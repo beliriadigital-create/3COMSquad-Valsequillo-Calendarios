@@ -57,16 +57,27 @@
 
     <script>
         function limpiarFecha(texto) {
-            if(!texto) return "";
-            // Separa DD/MM/AAAA de HH:MM si están pegados
-            return texto.replace(/(\d{2}\/\d{2}\/\d{4})(\d{2}:\d{2})/, '$1 | $2')
-                        .replace('VS', '').trim();
+            if (!texto) return "";
+            
+            // Convertir a string y normalizar espacios
+            let t = String(texto).replace(/\s+/g, " ").trim();
+            
+            // Caso típico iSquad: DD/MM/AAAAHH:MM (pegado sin espacio)
+            t = t.replace(/(\d{2}\/\d{2}\/\d{4})(\d{1,2}:\d{2})/, "$1 | $2");
+            
+            // Si ya tiene separador pero mal formateado
+            t = t.replace(/(\d{2}\/\d{2}\/\d{4})\s*\|\s*(\d{1,2}:\d{2})/, "$1 | $2");
+            
+            // Limpiar "VS" si aparece
+            t = t.replace('VS', '').trim();
+            
+            return t;
         }
 
         function parsearFecha(texto) {
-            if(!texto) return 0;
+            if (!texto) return 0;
             const match = texto.match(/(\d{2})\/(\d{2})\/(\d{4})/);
-            if(!match) return 0;
+            if (!match) return 0;
             // Crea un número AAAAMMDD para comparar fácilmente
             return parseInt(match[3] + match[2] + match[1]);
         }
