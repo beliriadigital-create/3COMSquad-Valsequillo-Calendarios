@@ -1,8 +1,15 @@
-[
-  {
-    "name": "Liga Territorial Femenina",
-    "slug": "TF",
-    "url": "https://resultadosbalonmano.isquad.es/competicion.php?id_superficie=1&seleccion=0&id_categoria=2660&id_temp=2526&id_ambito=20&id_territorial=37",
-    "club": "3COM Squad Valsequillo"
-  }
-]
+{
+  "categoria": "Liga Territorial Femenina",
+  "club": "3COM Squad Valsequillo",
+  "updated_at": "2026-01-18T21:45:49.065140Z",
+  "source": "https://resultadosbalonmano.isquad.es/competicion.php?id_superficie=1&seleccion=0&id_categoria=2660&id_temp=2526&id_ambito=20&id_territorial=37",
+  "matches": [
+    {
+      "fecha_texto": "VS 3COM Squad Valsequillo - CLUB DEPORTIVO CIUDAD DE PUERTO",
+      "local": "40 - 17",
+      "visitante": "18/01/2026 12:00",
+      "resultado": "40 - 17",
+      "lugar": ""
+    }
+  ]
+}
