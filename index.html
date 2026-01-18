@@ -17,7 +17,6 @@
         .logo { max-width: 100px; margin-bottom: 10px; }
         h1 { font-weight: 900; text-transform: uppercase; font-size: 1.4rem; margin: 0; }
 
-        /* Estilo del Partido Destacado */
         .destacado-container { max-width: 800px; margin: 0 auto 30px auto; }
         .destacado-card { 
             background: white; color: #1a1a1a; border-radius: 20px; padding: 25px;
@@ -25,13 +24,12 @@
             text-align: center;
         }
         .destacado-tag { background: var(--primary); color: white; padding: 6px 18px; border-radius: 50px; font-size: 0.75rem; font-weight: 900; text-transform: uppercase; display: inline-block; margin-bottom: 12px; }
-        .fecha-d { color: var(--primary); font-weight: 800; font-size: 0.95rem; margin: 8px 0; display: block; }
-        .equipo { font-size: 1.15rem; font-weight: 900; color: var(--dark); margin: 5px 0; }
-        .vs { font-size: 0.9rem; font-weight: 600; color: #999; margin: 8px 0; }
-        .resultado-grande { background: var(--dark); color: white; padding: 12px 20px; border-radius: 12px; font-size: 2rem; font-weight: 900; margin: 15px 0; display: inline-block; }
-        .lugar-d { font-size: 0.85rem; color: #666; margin-top: 12px; }
+        .fecha-d { color: var(--primary); font-weight: 800; font-size: 1rem; margin: 8px 0; display: block; letter-spacing: 1px; }
+        .equipo { font-size: 1.15rem; font-weight: 900; color: var(--dark); margin: 5px 0; text-transform: uppercase; }
+        .vs { font-size: 0.9rem; font-weight: 600; color: #999; margin: 5px 0; }
+        .resultado-grande { background: var(--dark); color: white; padding: 10px 25px; border-radius: 12px; font-size: 2.2rem; font-weight: 900; margin: 15px 0; display: inline-block; }
+        .lugar-d { font-size: 0.85rem; color: #666; margin-top: 12px; font-weight: 500; }
 
-        /* Estilo de la cuadrícula horizontal */
         .grid-categorias { 
             display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); 
             gap: 15px; max-width: 900px; margin: 0 auto; 
@@ -52,16 +50,18 @@
         <h1>3COM Squad Valsequillo</h1>
     </div>
 
-    <div class="destacado-container" id="destacado-area">
-        <!-- Aquí saldrá el partido destacado -->
-    </div>
+    <div class="destacado-container" id="destacado-area"></div>
 
     <h2 style="text-align:center; font-size: 1rem; text-transform: uppercase; opacity: 0.8; margin-bottom: 15px;">Todas las Categorías</h2>
-    <div id="menu-categorias" class="grid-categorias">
-        <!-- Botones horizontales -->
-    </div>
+    <div id="menu-categorias" class="grid-categorias"></div>
 
     <script>
+        function formatearFecha(texto) {
+            if(!texto) return "";
+            // Busca el patrón de fecha DD/MM/AAAA y le añade un espacio antes de la hora
+            return texto.replace(/(\d{2}\/\d{2}\/\d{4})(\d{2}:\d{2})/, '$1 | $2');
+        }
+
         async function iniciar() {
             const menu = document.getElementById('menu-categorias');
             const destacadoArea = document.getElementById('destacado-area');
@@ -69,61 +69,57 @@
             try {
                 const res = await fetch('categories.json?v=' + Date.now());
                 const categorias = await res.json();
-                let partidoDestacado = null;
+                let partidosEncontrados = [];
 
                 for (const cat of categorias) {
-                    // 1. Crear botón en el menú horizontal
                     const a = document.createElement('a');
                     a.href = './' + cat.slug + '/';
                     a.className = 'card-cat';
                     a.innerHTML = `<span class="cat-name">${cat.name}</span>`;
                     menu.appendChild(a);
 
-                    // 2. Buscar el partido más reciente/próximo
                     try {
                         const resP = await fetch(`./${cat.slug}/partidos.json?v=` + Date.now());
                         const dataP = await resP.json();
                         if (dataP.matches && dataP.matches.length > 0) {
-                            const primerPartido = dataP.matches[0];
-                            if (!partidoDestacado) {
-                                partidoDestacado = { ...primerPartido, catName: cat.name };
-                            }
+                            // Buscamos el primer partido que NO tenga resultado (el próximo real)
+                            let proximo = dataP.matches.find(m => !m.local.includes('-') && !m.resultado?.includes('-'));
+                            // Si todos tienen resultado, cogemos el primero de la lista (el último jugado)
+                            if (!proximo) proximo = dataP.matches[0];
+                            
+                            partidosEncontrados.push({ ...proximo, catName: cat.name, slug: cat.slug });
                         }
-                    } catch (e) { console.log("No hay datos para " + cat.slug); }
+                    } catch (e) { console.log("Sin datos para " + cat.slug); }
                 }
 
-                // 3. Mostrar el partido destacado
-                if (partidoDestacado) {
-                    const p = partidoDestacado;
+                if (partidosEncontrados.length > 0) {
+                    // Priorizamos mostrar un partido que NO se haya jugado todavía
+                    let p = partidosEncontrados.find(m => !m.local.includes('-')) || partidosEncontrados[0];
                     
-                    // Detectar si tiene resultado (partido jugado)
                     const tieneResultado = p.local && p.local.includes('-');
                     const etiqueta = tieneResultado ? "ÚLTIMO RESULTADO" : "PRÓXIMO PARTIDO";
                     
-                    // Extraer equipos correctamente
-                    let equipoLocal, equipoVisitante, fecha, resultado, lugar;
+                    let equipoLocal, equipoVisitante, fechaRaw, resultado, lugar;
                     
-                    if (tieneResultado) {
-                        // Formato TF (datos cruzados)
+                    if (p.slug === "TF" && tieneResultado) {
                         const equipos = p.fecha_texto.replace('VS', '').split('-');
-                        equipoLocal = equipos[0] ? equipos[0].trim() : '';
-                        equipoVisitante = equipos[1] ? equipos[1].trim() : '';
-                        fecha = p.visitante;
+                        equipoLocal = equipos[0]?.trim();
+                        equipoVisitante = equipos[1]?.trim();
+                        fechaRaw = p.visitante;
                         resultado = p.local;
                         lugar = p.resultado;
                     } else {
-                        // Formato normal (Juvenil, Cadete, Infantil)
                         equipoLocal = p.local;
                         equipoVisitante = p.visitante;
-                        fecha = p.fecha_texto;
-                        resultado = p.resultado || '';
-                        lugar = p.lugar;
+                        fechaRaw = p.fecha_texto;
+                        resultado = (p.resultado && p.resultado.includes('-')) ? p.resultado : "";
+                        lugar = p.lugar || p.resultado;
                     }
 
                     destacadoArea.innerHTML = `
                         <div class="destacado-card">
                             <span class="destacado-tag">${etiqueta}: ${p.catName}</span>
-                            <span class="fecha-d">🗓️ ${fecha}</span>
+                            <span class="fecha-d">🗓️ ${formatearFecha(fechaRaw)}</span>
                             <div class="equipo">${equipoLocal}</div>
                             <div class="vs">vs</div>
                             <div class="equipo">${equipoVisitante}</div>
@@ -137,4 +133,4 @@
         iniciar();
     </script>
 </body>
-</html>     
+</html>
