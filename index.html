@@ -3,115 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calendario 3COM Squad</title>
+    <title>3COM Squad Valsequillo - Calendarios</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root { --primary: #00529b; --accent: #ffcc00; --bg: #f0f4f8; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; padding: 20px; color: #1a1a1a; }
-        .header { text-align: center; margin-bottom: 40px; }
-        h1 { color: var(--primary); font-weight: 900; text-transform: uppercase; letter-spacing: -1px; }
-        
-        /* PARTIDO DESTACADO (ARRIBA) */
-        #destacado { margin-bottom: 40px; display: flex; justify-content: center; width: 100%; }
-        .card-top { 
-            background: white; border-radius: 20px; padding: 30px; width: 100%; max-width: 800px;
-            box-shadow: 0 10px 30px rgba(0,82,155,0.15); border-left: 8px solid var(--accent);
-            text-align: center; position: relative;
+        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; padding: 40px 20px; text-align: center; }
+        .logo { max-width: 200px; margin-bottom: 20px; }
+        h1 { color: var(--primary); font-weight: 900; text-transform: uppercase; margin-bottom: 40px; }
+        .menu { display: flex; flex-direction: column; gap: 15px; max-width: 400px; margin: 0 auto; }
+        .btn { 
+            background: white; color: var(--primary); text-decoration: none; 
+            padding: 20px; border-radius: 15px; font-weight: 700; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: 0.3s;
+            border: 2px solid transparent;
         }
-        .card-top::before { content: "PRÓXIMO PARTIDO"; position: absolute; top: -12px; left: 20px; background: var(--accent); padding: 4px 12px; border-radius: 5px; font-size: 0.7rem; font-weight: 700; }
-
-        /* CONTENEDOR HORIZONTAL (EL ARREGLO) */
-        #grilla { 
-            display: flex; 
-            flex-direction: row; /* Fuerza horizontal */
-            flex-wrap: wrap;    /* Si se acaba el ancho de la pantalla, salta de línea */
-            gap: 20px; 
-            justify-content: center; 
-            align-items: stretch;
-            width: 100%;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .card-mini { 
-            background: white; border-radius: 15px; padding: 20px; 
-            width: 300px; /* Ancho fijo para que quepan varias en fila */
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05); 
-            display: flex; 
-            flex-direction: column;
-            border-top: 4px solid var(--primary);
-            text-align: center;
-        }
-
-        .fecha { color: var(--primary); font-weight: 700; font-size: 0.9rem; margin-bottom: 10px; display: block; }
-        .equipos { font-size: 1.1rem; font-weight: 700; margin: 10px 0; line-height: 1.3; }
-        .vs { color: #999; font-size: 0.8rem; font-weight: 400; }
-        .resultado { background: #eef2f7; padding: 8px; border-radius: 8px; font-weight: 900; margin: 10px 0; color: var(--primary); font-size: 1.2rem; }
-        .lugar { font-size: 0.75rem; color: #666; margin-top: auto; padding-top: 10px; border-top: 1px solid #eee; }
-        
-        .btn-ics { display: inline-block; background: var(--primary); color: white; text-decoration: none; padding: 12px 25px; border-radius: 50px; font-weight: 700; margin-top: 20px; }
-        .back { text-decoration: none; color: var(--primary); font-size: 0.9rem; font-weight: 700; }
-
-        /* En móviles muy pequeños, sí permitimos que sea vertical para que no se rompa */
-        @media (max-width: 650px) {
-            .card-mini { width: 100%; max-width: 350px; }
-        }
+        .btn:hover { border-color: var(--primary); transform: translateY(-3px); }
     </style>
 </head>
 <body>
-
-    <div class="header">
-        <a href="../" class="back">← VOLVER AL CLUB</a>
-        <h1 id="titulo-cat">Cargando...</h1>
-        <div id="destacado"></div>
-        <a href="calendario.ics" class="btn-ics">📅 AÑADIR AL MÓVIL (.ICS)</a>
+    <h1>3COM Squad Valsequillo</h1>
+    <div class="menu">
+        <a href="TF/" class="btn">🏆 Liga Territorial Femenina</a>
+        <a href="JUVF/" class="btn">🏐 Juvenil Femenino</a>
+        <a href="CADF/" class="btn">🏐 Cadete Femenino</a>
+        <a href="INFF/" class="btn">🏐 Infantil Femenino</a>
     </div>
-
-    <h2 id="titulo-otros" style="text-align:center; color:#666; font-size:1rem; text-transform:uppercase; margin-top: 20px; display:none;">Resto del Calendario</h2>
-    <div id="grilla"></div>
-
-    <script>
-        fetch('partidos.json')
-            .then(res => res.json())
-            .then(data => {
-                document.getElementById('titulo-cat').innerText = data.categoria;
-                const destacadoDiv = document.getElementById('destacado');
-                const grillaDiv = document.getElementById('grilla');
-                const tituloOtros = document.getElementById('titulo-otros');
-
-                const partidos = data.matches.sort((a, b) => {
-                    const parseDate = (s) => {
-                        const [d, h] = s.split(' ');
-                        const [day, month, year] = d.split('/');
-                        return new Date(`${year}-${month}-${day}T${h || '00:00'}`);
-                    };
-                    return parseDate(a.fecha_texto) - parseDate(b.fecha_texto);
-                });
-
-                partidos.forEach((m, index) => {
-                    const html = `
-                        <span class="fecha">🗓️ ${m.fecha_texto}</span>
-                        <div class="equipos">
-                            ${m.local} <br><span class="vs">VS</span><br> ${m.visitante}
-                        </div>
-                        ${m.resultado ? `<div class="resultado">${m.resultado}</div>` : ''}
-                        <div class="lugar">📍 ${m.lugar}</div>
-                    `;
-
-                    if (index === 0) {
-                        const div = document.createElement('div');
-                        div.className = 'card-top';
-                        div.innerHTML = html;
-                        destacadoDiv.appendChild(div);
-                    } else {
-                        tituloOtros.style.display = 'block';
-                        const div = document.createElement('div');
-                        div.className = 'card-mini';
-                        div.innerHTML = html;
-                        grillaDiv.appendChild(div);
-                    }
-                });
-            });
-    </script>
 </body>
 </html>
