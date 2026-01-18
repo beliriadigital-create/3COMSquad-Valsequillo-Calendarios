@@ -20,11 +20,16 @@
         /* Estilo del Partido Destacado */
         .destacado-container { max-width: 800px; margin: 0 auto 30px auto; }
         .destacado-card { 
-            background: white; color: #1a1a1a; border-radius: 20px; padding: 20px;
+            background: white; color: #1a1a1a; border-radius: 20px; padding: 25px;
             border-left: 10px solid var(--primary); box-shadow: 0 15px 35px rgba(0,0,0,0.4);
             text-align: center;
         }
-        .destacado-tag { background: var(--primary); color: white; padding: 5px 15px; border-radius: 50px; font-size: 0.7rem; font-weight: 900; text-transform: uppercase; }
+        .destacado-tag { background: var(--primary); color: white; padding: 6px 18px; border-radius: 50px; font-size: 0.75rem; font-weight: 900; text-transform: uppercase; display: inline-block; margin-bottom: 12px; }
+        .fecha-d { color: var(--primary); font-weight: 800; font-size: 0.95rem; margin: 8px 0; display: block; }
+        .equipo { font-size: 1.15rem; font-weight: 900; color: var(--dark); margin: 5px 0; }
+        .vs { font-size: 0.9rem; font-weight: 600; color: #999; margin: 8px 0; }
+        .resultado-grande { background: var(--dark); color: white; padding: 12px 20px; border-radius: 12px; font-size: 2rem; font-weight: 900; margin: 15px 0; display: inline-block; }
+        .lugar-d { font-size: 0.85rem; color: #666; margin-top: 12px; }
 
         /* Estilo de la cuadrícula horizontal */
         .grid-categorias { 
@@ -39,9 +44,6 @@
         }
         .card-cat:hover { transform: translateY(-5px); background: white; }
         .cat-name { font-weight: 800; font-size: 0.9rem; color: var(--dark); display: block; }
-        
-        .fecha-d { color: var(--primary); font-weight: 800; font-size: 0.9rem; margin: 10px 0; display: block; }
-        .equipos-d { font-size: 1.1rem; font-weight: 900; margin: 10px 0; line-height: 1.2; }
     </style>
 </head>
 <body>
@@ -51,10 +53,10 @@
     </div>
 
     <div class="destacado-container" id="destacado-area">
-        <!-- Aquí saldrá el próximo partido de cualquier categoría -->
+        <!-- Aquí saldrá el partido destacado -->
     </div>
 
-    <h2 style="text-align:center; font-size: 1rem; text-transform: uppercase; opacity: 0.8;">Todas las Categorías</h2>
+    <h2 style="text-align:center; font-size: 1rem; text-transform: uppercase; opacity: 0.8; margin-bottom: 15px;">Todas las Categorías</h2>
     <div id="menu-categorias" class="grid-categorias">
         <!-- Botones horizontales -->
     </div>
@@ -67,7 +69,7 @@
             try {
                 const res = await fetch('categories.json?v=' + Date.now());
                 const categorias = await res.json();
-                let todosLosPartidos = [];
+                let partidoDestacado = null;
 
                 for (const cat of categorias) {
                     // 1. Crear botón en el menú horizontal
@@ -77,31 +79,56 @@
                     a.innerHTML = `<span class="cat-name">${cat.name}</span>`;
                     menu.appendChild(a);
 
-                    // 2. Intentar buscar el próximo partido para el destacado
+                    // 2. Buscar el partido más reciente/próximo
                     try {
                         const resP = await fetch(`./${cat.slug}/partidos.json?v=` + Date.now());
                         const dataP = await resP.json();
                         if (dataP.matches && dataP.matches.length > 0) {
-                            // Cogemos el primero que no tenga resultado (el próximo)
-                            const proximo = dataP.matches.find(m => !m.local.includes('-') && !m.resultado?.includes('-')) || dataP.matches[0];
-                            todosLosPartidos.push({ ...proximo, catName: cat.name });
+                            const primerPartido = dataP.matches[0];
+                            if (!partidoDestacado) {
+                                partidoDestacado = { ...primerPartido, catName: cat.name };
+                            }
                         }
                     } catch (e) { console.log("No hay datos para " + cat.slug); }
                 }
 
-                // 3. Mostrar el partido más relevante arriba
-                if (todosLosPartidos.length > 0) {
-                    const p = todosLosPartidos[0]; // Por ahora el primero encontrado
+                // 3. Mostrar el partido destacado
+                if (partidoDestacado) {
+                    const p = partidoDestacado;
+                    
+                    // Detectar si tiene resultado (partido jugado)
+                    const tieneResultado = p.local && p.local.includes('-');
+                    const etiqueta = tieneResultado ? "ÚLTIMO RESULTADO" : "PRÓXIMO PARTIDO";
+                    
+                    // Extraer equipos correctamente
+                    let equipoLocal, equipoVisitante, fecha, resultado, lugar;
+                    
+                    if (tieneResultado) {
+                        // Formato TF (datos cruzados)
+                        const equipos = p.fecha_texto.replace('VS', '').split('-');
+                        equipoLocal = equipos[0] ? equipos[0].trim() : '';
+                        equipoVisitante = equipos[1] ? equipos[1].trim() : '';
+                        fecha = p.visitante;
+                        resultado = p.local;
+                        lugar = p.resultado;
+                    } else {
+                        // Formato normal (Juvenil, Cadete, Infantil)
+                        equipoLocal = p.local;
+                        equipoVisitante = p.visitante;
+                        fecha = p.fecha_texto;
+                        resultado = p.resultado || '';
+                        lugar = p.lugar;
+                    }
+
                     destacadoArea.innerHTML = `
                         <div class="destacado-card">
-                            <span class="destacado-tag">Próximo Partido: ${p.catName}</span>
-                            <span class="fecha-d">🗓️ ${p.visitante.includes('/') ? p.visitante : p.fecha_texto}</span>
-                            <div class="equipos-d">
-                                ${p.local.includes('-') ? p.fecha_texto.replace('VS','') : p.local} 
-                                <br>vs<br> 
-                                ${p.visitante.includes('/') ? p.local : p.visitante}
-                            </div>
-                            <div style="font-size:0.8rem; color:#666;">📍 ${p.resultado.includes('PABELLON') ? p.resultado : p.lugar}</div>
+                            <span class="destacado-tag">${etiqueta}: ${p.catName}</span>
+                            <span class="fecha-d">🗓️ ${fecha}</span>
+                            <div class="equipo">${equipoLocal}</div>
+                            <div class="vs">vs</div>
+                            <div class="equipo">${equipoVisitante}</div>
+                            ${resultado ? `<div class="resultado-grande">${resultado}</div>` : ''}
+                            <div class="lugar-d">📍 ${lugar}</div>
                         </div>
                     `;
                 }
@@ -110,4 +137,4 @@
         iniciar();
     </script>
 </body>
-</html>
+</html>     
