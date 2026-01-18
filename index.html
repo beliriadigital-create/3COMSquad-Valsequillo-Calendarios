@@ -24,7 +24,7 @@
             text-align: center;
         }
         .destacado-tag { background: var(--primary); color: white; padding: 6px 18px; border-radius: 50px; font-size: 0.75rem; font-weight: 900; text-transform: uppercase; display: inline-block; margin-bottom: 12px; }
-        .fecha-d { color: var(--primary); font-weight: 800; font-size: 1rem; margin: 8px 0; display: block; letter-spacing: 1px; }
+        .fecha-d { color: var(--primary); font-weight: 800; font-size: 1.1rem; margin: 8px 0; display: block; }
         .equipo { font-size: 1.15rem; font-weight: 900; color: var(--dark); margin: 5px 0; text-transform: uppercase; }
         .vs { font-size: 0.9rem; font-weight: 600; color: #999; margin: 5px 0; }
         .resultado-grande { background: var(--dark); color: white; padding: 10px 25px; border-radius: 12px; font-size: 2.2rem; font-weight: 900; margin: 15px 0; display: inline-block; }
@@ -56,10 +56,19 @@
     <div id="menu-categorias" class="grid-categorias"></div>
 
     <script>
-        function formatearFecha(texto) {
+        function limpiarFecha(texto) {
             if(!texto) return "";
-            // Busca el patrón de fecha DD/MM/AAAA y le añade un espacio antes de la hora
-            return texto.replace(/(\d{2}\/\d{2}\/\d{4})(\d{2}:\d{2})/, '$1 | $2');
+            // Separa DD/MM/AAAA de HH:MM si están pegados
+            return texto.replace(/(\d{2}\/\d{2}\/\d{4})(\d{2}:\d{2})/, '$1 | $2')
+                        .replace('VS', '').trim();
+        }
+
+        function parsearFecha(texto) {
+            if(!texto) return 0;
+            const match = texto.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+            if(!match) return 0;
+            // Crea un número AAAAMMDD para comparar fácilmente
+            return parseInt(match[3] + match[2] + match[1]);
         }
 
         async function iniciar() {
@@ -69,7 +78,8 @@
             try {
                 const res = await fetch('categories.json?v=' + Date.now());
                 const categorias = await res.json();
-                let partidosEncontrados = [];
+                let proximosPartidos = [];
+                let ultimosResultados = [];
 
                 for (const cat of categorias) {
                     const a = document.createElement('a');
@@ -82,21 +92,26 @@
                         const resP = await fetch(`./${cat.slug}/partidos.json?v=` + Date.now());
                         const dataP = await resP.json();
                         if (dataP.matches && dataP.matches.length > 0) {
-                            // Buscamos el primer partido que NO tenga resultado (el próximo real)
-                            let proximo = dataP.matches.find(m => !m.local.includes('-') && !m.resultado?.includes('-'));
-                            // Si todos tienen resultado, cogemos el primero de la lista (el último jugado)
-                            if (!proximo) proximo = dataP.matches[0];
-                            
-                            partidosEncontrados.push({ ...proximo, catName: cat.name, slug: cat.slug });
+                            dataP.matches.forEach(m => {
+                                const tieneRes = (m.local && m.local.includes('-')) || (m.resultado && m.resultado.includes('-'));
+                                const info = { ...m, catName: cat.name, slug: cat.slug, fechaNum: parsearFecha(m.fecha_texto || m.visitante) };
+                                
+                                if (tieneRes) ultimosResultados.push(info);
+                                else proximosPartidos.push(info);
+                            });
                         }
                     } catch (e) { console.log("Sin datos para " + cat.slug); }
                 }
 
-                if (partidosEncontrados.length > 0) {
-                    // Priorizamos mostrar un partido que NO se haya jugado todavía
-                    let p = partidosEncontrados.find(m => !m.local.includes('-')) || partidosEncontrados[0];
-                    
-                    const tieneResultado = p.local && p.local.includes('-');
+                // Ordenar próximos por fecha (el más cercano primero)
+                proximosPartidos.sort((a, b) => a.fechaNum - b.fechaNum);
+                // Ordenar resultados por fecha (el más reciente primero)
+                ultimosResultados.sort((a, b) => b.fechaNum - a.fechaNum);
+
+                const p = proximosPartidos.length > 0 ? proximosPartidos[0] : ultimosResultados[0];
+
+                if (p) {
+                    const tieneResultado = (p.local && p.local.includes('-')) || (p.resultado && p.resultado.includes('-'));
                     const etiqueta = tieneResultado ? "ÚLTIMO RESULTADO" : "PRÓXIMO PARTIDO";
                     
                     let equipoLocal, equipoVisitante, fechaRaw, resultado, lugar;
@@ -119,7 +134,7 @@
                     destacadoArea.innerHTML = `
                         <div class="destacado-card">
                             <span class="destacado-tag">${etiqueta}: ${p.catName}</span>
-                            <span class="fecha-d">🗓️ ${formatearFecha(fechaRaw)}</span>
+                            <span class="fecha-d">🗓️ ${limpiarFecha(fechaRaw)}</span>
                             <div class="equipo">${equipoLocal}</div>
                             <div class="vs">vs</div>
                             <div class="equipo">${equipoVisitante}</div>
