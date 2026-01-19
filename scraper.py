@@ -2,6 +2,7 @@ import json, os, re, requests
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
 
+# Mejor filtro: ambas palabras deben aparecer en la fila (en minúsculas)
 CLUB_KEYS = ["3com", "valsequillo"]
 
 def clean(s: str) -> str:
@@ -20,10 +21,13 @@ def scrape_categoria(cat):
         
         for tr in soup.find_all("tr"):
             tds = tr.find_all("td")
-            if len(tds) < 4: continue
+            if len(tds) < 4: 
+                continue
             
             texto_fila = tr.get_text(" ", strip=True).lower()
-            if not any(k in texto_fila for k in CLUB_KEYS): continue
+            # Cambiado filtro: ambas palabras deben estar en la fila
+            if not all(k in texto_fila for k in CLUB_KEYS):
+                continue
 
             celdas = [clean(td.get_text(" ", strip=True)) for td in tds]
             
@@ -71,7 +75,8 @@ def scrape_categoria(cat):
                           f"DTSTART:{dt.strftime('%Y%m%dT%H%M%S')}",
                           f"DTEND:{(dt + timedelta(minutes=90)).strftime('%Y%m%dT%H%M%S')}",
                           f"LOCATION:{m['lugar']}", "END:VEVENT"]
-            except: continue
+            except: 
+                continue
         lines.append("END:VCALENDAR")
         with open(f"{slug}/calendar.ics", "w", encoding="utf-8") as f:
             f.write("\n".join(lines))
@@ -85,7 +90,8 @@ def main():
         print("Error: No existe categories.json")
         return
     with open("categories.json", "r", encoding="utf-8") as f:
-        for cat in json.load(f): scrape_categoria(cat)
+        for cat in json.load(f): 
+            scrape_categoria(cat)
 
 if __name__ == "__main__":
     main()
