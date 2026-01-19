@@ -11,19 +11,14 @@
         body::before { content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: -1; }
         .header { text-align: center; padding: 10px; }
         .logo { max-width: 100px; }
-        
-        .destacado-card { background: white; color: #1a1a1a; border-radius: 20px; padding: 20px; max-width: 500px; margin: 0 auto 30px; text-align: center; border-left: 8px solid var(--primary); }
-        .res-grande { background: var(--dark); color: white; font-size: 2rem; font-weight: 900; padding: 8px 20px; border-radius: 12px; display: inline-block; margin: 10px 0; }
-
-        .cat-header { background: var(--primary); padding: 10px 15px; font-weight: 900; display: flex; justify-content: space-between; border-radius: 10px 10px 0 0; font-size: 0.8rem; }
-        .carousel { display: flex; overflow-x: auto; gap: 15px; padding: 15px 10px; background: rgba(255,255,255,0.05); border-radius: 0 0 10px 10px; margin-bottom: 25px; -webkit-overflow-scrolling: touch; }
+        .cat-header { background: var(--primary); padding: 10px 15px; font-weight: 900; border-radius: 10px 10px 0 0; font-size: 0.8rem; margin-top: 20px; }
+        .carousel { display: flex; overflow-x: auto; gap: 15px; padding: 15px 10px; background: rgba(255,255,255,0.05); border-radius: 0 0 10px 10px; -webkit-overflow-scrolling: touch; }
         .card { background: white; color: #333; min-width: 220px; padding: 15px; border-radius: 12px; flex-shrink: 0; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
         .p-fecha { font-weight: 800; color: var(--primary); font-size: 0.8rem; margin-bottom: 8px; border-bottom: 1px solid #eee; }
     </style>
 </head>
 <body>
     <div class="header"><img src="logo.png" class="logo"><h1>3COM Squad</h1></div>
-    <div id="destacado"></div>
     <div id="lista-categorias"></div>
 
     <script>
@@ -31,26 +26,24 @@
             const res = await fetch('categories.json?v=' + Date.now());
             const cats = await res.json();
             const lista = document.getElementById('lista-categorias');
-            let todos = [];
 
             for (const c of cats) {
                 try {
                     const rp = await fetch(`./${c.slug}/partidos.json?v=` + Date.now());
                     const data = await rp.json();
-                    if (data.matches.length > 0) {
+                    if (data.matches && data.matches.length > 0) {
                         let cards = '';
                         data.matches.forEach(m => {
-                            todos.push({...m, cat: c.name});
-                            cards += `<div class="card"><div class="p-fecha">🗓️ ${m.fecha_texto}</div><div style="font-size:0.8rem; font-weight:700;">${m.local}<br>vs<br>${m.visitante}</div><div style="margin-top:10px; font-weight:900; color:var(--primary)">${m.resultado || 'PRÓXIMO'}</div></div>`;
+                            cards += `
+                                <div class="card">
+                                    <div class="p-fecha">🗓️ ${m.fecha_texto}</div>
+                                    <div style="font-size:0.8rem; font-weight:700;">${m.local}<br>vs<br>${m.visitante}</div>
+                                    <div style="margin-top:10px; font-weight:900; color:var(--primary)">${m.resultado || 'PRÓXIMO'}</div>
+                                </div>`;
                         });
-                        lista.innerHTML += `<div><div class="cat-header"><span>${c.name}</span></div><div class="carousel">${cards}</div></div>`;
+                        lista.innerHTML += `<div><div class="cat-header">${c.name}</div><div class="carousel">${cards}</div></div>`;
                     }
-                } catch(e) {}
-            }
-            
-            if(todos.length > 0) {
-                const p = todos[0];
-                document.getElementById('destacado').innerHTML = `<div class="destacado-card"><strong style="color:var(--primary)">${p.cat}</strong><br><small>${p.fecha_texto}</small><h3>${p.local} vs ${p.visitante}</h3><div class="res-grande">${p.resultado || 'VS'}</div><p style="font-size:0.8rem; color:#666">📍 ${p.lugar}</p></div>`;
+                } catch(e) { console.log("Error en " + c.slug); }
             }
         }
         cargar();
