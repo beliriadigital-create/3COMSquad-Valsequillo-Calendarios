@@ -57,13 +57,17 @@ def scrape_categoria(cat):
 
         celdas = [clean(td.get_text(" ", strip=True)) for td in tds]
 
-        # Detectar formato por número de columnas y contenido
         if len(celdas) >= 5 and ("VS" in celdas[0].upper() or " - " in celdas[0]):
-            # Formato Juvenil/Cadete/Infantil
             equipos_txt = celdas[0]
             marcador_txt = celdas[1]
             fecha_txt = celdas[2]
-            lugar_txt = celdas[3]
+            # Mejorar captura de fecha si está vacía
+            if not fecha_txt or fecha_txt.strip() == "":
+                if len(celdas) > 3:
+                    fecha_txt = celdas[3]
+                else:
+                    fecha_txt = "Fecha no disponible"
+            lugar_txt = celdas[3] if len(celdas) > 3 else ""
             estado_txt = celdas[4] if len(celdas) > 4 else ""
 
             local, visitante = parse_equipos_cell(equipos_txt)
@@ -81,7 +85,6 @@ def scrape_categoria(cat):
                 "estado": estado_txt
             })
         else:
-            # Formato Territorial u otros
             fecha_txt = celdas[0]
             local_txt = celdas[1]
             visitante_txt = celdas[2]
@@ -102,7 +105,6 @@ def scrape_categoria(cat):
     with open(f"{slug}/partidos.json", "w", encoding="utf-8") as f:
         json.dump({"matches": matches}, f, ensure_ascii=False)
 
-    # ICS (solo si hay fecha con dd/mm/yyyy y hh:mm)
     lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "X-WR-CALNAME:" + cat["name"]]
     for m in matches:
         try:
