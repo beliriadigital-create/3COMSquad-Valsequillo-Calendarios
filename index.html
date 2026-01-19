@@ -16,9 +16,12 @@
         .cat-header { background: var(--primary); padding: 8px 12px; font-weight: 900; border-radius: 10px 10px 0 0; font-size: 0.7rem; margin-top: 15px; display: flex; justify-content: space-between; align-items: center; }
         .btn-cal { background: white; color: var(--primary); padding: 3px 8px; border-radius: 4px; text-decoration: none; font-size: 0.6rem; font-weight: 900; }
         .carousel { display: flex; overflow-x: auto; gap: 10px; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 0 0 10px 10px; -webkit-overflow-scrolling: touch; }
-        .card { background: white; color: #333; min-width: 180px; padding: 12px; border-radius: 10px; flex-shrink: 0; text-align: center; }
-        .p-fecha { font-weight: 800; color: var(--primary); font-size: 0.7rem; margin-bottom: 5px; border-bottom: 1px solid #eee; }
-        .p-equipos { font-weight: 700; font-size: 0.65rem; text-transform: uppercase; min-height: 40px; display: flex; align-items: center; justify-content: center; flex-direction: column; }
+        .card { background: white; color: #333; min-width: 180px; padding: 12px; border-radius: 10px; flex-shrink: 0; text-align: center; display: flex; flex-direction: column; }
+        .p-fecha { font-weight: 800; color: var(--primary); font-size: 0.7rem; margin-bottom: 8px; border-bottom: 1px solid #eee; padding-bottom: 3px; }
+        .p-equipos { font-weight: 700; font-size: 0.65rem; text-transform: uppercase; line-height: 1.4; flex-grow: 1; display: flex; flex-direction: column; justify-content: center; }
+        .vs-label { color: #999; font-size: 0.55rem; margin: 2px 0; }
+        .p-res { background: var(--dark); color: white; margin-top: 8px; padding: 4px; border-radius: 6px; font-weight: 900; font-size: 0.8rem; }
+        .p-lugar { font-size: 0.55rem; color: #666; margin-top: 5px; font-style: italic; }
     </style>
 </head>
 <body>
@@ -38,16 +41,32 @@
                         let cards = '';
                         data.matches.forEach(m => {
                             todos.push({...m, cat: c.name});
-                            cards += `<div class="card"><div class="p-fecha">${m.fecha_texto}</div><div class="p-equipos">${m.local}<br>vs<br>${m.visitante}</div><div style="font-weight:900;color:var(--primary);margin-top:5px;">${m.resultado || 'VS'}</div></div>`;
+                            cards += `
+                                <div class="card">
+                                    <div class="p-fecha">${m.fecha_texto}</div>
+                                    <div class="p-equipos">
+                                        <div>${m.local}</div>
+                                        <div class="vs-label">VS</div>
+                                        <div>${m.visitante}</div>
+                                    </div>
+                                    <div class="p-res">${m.resultado || 'PRÓXIMO'}</div>
+                                    <div class="p-lugar">📍 ${m.lugar || 'Pabellón'}</div>
+                                </div>`;
                         });
                         document.getElementById('lista-categorias').innerHTML += `<div><div class="cat-header"><span>${c.name}</span><a href="./${c.slug}/calendar.ics" class="btn-cal">CALENDARIO</a></div><div class="carousel">${cards}</div></div>`;
                     }
                 } catch(e) {}
             }
             if (todos.length > 0) {
-                // Elige el último partido si todos tienen resultado, o el primero sin resultado
                 const p = todos.find(m => !m.resultado || !m.resultado.includes('-')) || todos[todos.length - 1];
-                document.getElementById('destacado-container').innerHTML = `<div class="destacado"><div style="color:var(--primary);font-weight:900;font-size:0.6rem;">${p.cat}</div><div style="font-size:0.8rem;font-weight:700;">${p.fecha_texto}</div><h3 style="font-size:0.9rem;margin:10px 0;">${p.local} vs ${p.visitante}</h3><div class="res-dest">${p.resultado || 'VS'}</div></div>`;
+                document.getElementById('destacado-container').innerHTML = `
+                    <div class="destacado">
+                        <div style="color:var(--primary);font-weight:900;font-size:0.6rem;text-transform:uppercase;">${p.cat}</div>
+                        <div style="font-size:0.8rem;font-weight:700;margin-top:5px;">🗓️ ${p.fecha_texto}</div>
+                        <h3 style="font-size:0.9rem;margin:10px 0;text-transform:uppercase;">${p.local}<br><span style="color:#999;font-size:0.7rem;">vs</span><br>${p.visitante}</h3>
+                        <div class="res-dest">${p.resultado || 'VS'}</div>
+                        <div style="font-size:0.65rem;color:#666;">📍 ${p.lugar}</div>
+                    </div>`;
             }
         }
         cargar();
