@@ -12,42 +12,41 @@
     .logo-header img{ max-width: 200px; }
     
     .cat-section { margin-bottom: 40px; }
-    .cat-header { 
-        display: flex; justify-content: space-between; align-items: center;
-        background: var(--accent); padding: 12px 20px; border-radius: 12px 12px 0 0;
-    }
-    .cat-header h2 { margin: 0; font-size: 16px; text-transform: uppercase; letter-spacing: 1px; }
-    .btn-ver { color: #fff; text-decoration: none; font-size: 11px; border: 1px solid rgba(255,255,255,0.5); padding: 5px 10px; border-radius: 6px; font-weight: bold; }
+    .cat-header { background: var(--accent); padding: 12px 20px; border-radius: 8px 8px 0 0; }
+    .cat-header h2 { margin: 0; font-size: 16px; text-transform: uppercase; }
 
-    .grid { display: flex; flex-direction: column; gap: 15px; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 0 0 12px 12px; }
-    .card { background: var(--card); color: var(--text); border-radius: 12px; padding: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.4); display: flex; flex-direction: column; }
+    .grid { display: flex; flex-direction: column; gap: 15px; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 0 0 8px 8px; }
+    .card { background: var(--card); color: var(--text); border-radius: 10px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
     
-    .meta-top { font-size: 14px; color: var(--muted); margin-bottom: 12px; font-weight: 700; display: flex; align-items: center; gap: 5px; }
-    
-    .teams { font-weight: 800; font-size: 18px; text-align: center; margin: 10px 0; color: #000; line-height: 1.2; }
-    .vs { color: var(--muted); display: block; font-size: 14px; font-weight: 400; margin: 4px 0; }
+    .meta-top { font-size: 14px; color: var(--muted); margin-bottom: 8px; font-weight: 700; }
+    .teams { font-weight: 800; font-size: 18px; text-align: center; margin: 10px 0; color: #000; }
+    .vs { color: var(--muted); margin: 0 5px; font-weight: 400; }
     
     .result-container { text-align: center; margin: 10px 0; }
-    .result { background: var(--accent); color: #fff; padding: 8px 20px; border-radius: 8px; font-weight: 900; font-size: 24px; display: inline-block; }
+    .result { background: var(--accent); color: #fff; padding: 5px 15px; border-radius: 6px; font-weight: 900; font-size: 22px; display: inline-block; }
     
-    .bottom { margin-top: 15px; padding-top: 12px; border-top: 1px solid #eee; display: flex; flex-direction: column; gap: 5px; }
-    .lugar { font-size: 13px; color: var(--muted); font-weight: 500; }
-    .estado { font-size: 12px; color: var(--accent); font-weight: 800; text-transform: uppercase; text-align: right; margin-top: 5px; }
-    
-    .no-data { text-align: center; padding: 30px; color: rgba(255,255,255,0.3); font-style: italic; font-size: 14px; }
+    /* ESTO ES LO QUE PONE EL PABELLON DEBAJO */
+    .lugar-box { 
+        display: block; 
+        width: 100%; 
+        margin-top: 15px; 
+        padding-top: 10px; 
+        border-top: 1px solid #eee; 
+        color: var(--muted); 
+        font-size: 13px; 
+        font-weight: 500;
+    }
+    .no-data { text-align: center; padding: 20px; color: rgba(255,255,255,0.3); }
   </style>
 </head>
 <body>
 
 <div class="wrap">
-  <div class="logo-header">
-    <img src="logo.png" alt="3COM Squad">
-  </div>
+  <div class="logo-header"><img src="logo.png"></div>
   <div id="master-container"></div>
 </div>
 
 <script>
-// Usamos exactamente los nombres de tus carpetas (Mayúsculas)
 const categorias = [
   { name: "Liga Territorial Femenina", slug: "TF" },
   { name: "Juvenil Femenino", slug: "JUVF" },
@@ -56,62 +55,43 @@ const categorias = [
 ];
 
 const container = document.getElementById('master-container');
-const version = new Date().getTime(); // Truco para saltar la caché
 
 categorias.forEach(cat => {
   const section = document.createElement('div');
   section.className = 'cat-section';
   section.innerHTML = `
-    <div class="cat-header">
-      <h2>${cat.name}</h2>
-      <a href="${cat.slug}/" class="btn-ver">VER CALENDARIO COMPLETO</a>
-    </div>
-    <div class="grid" id="grid-${cat.slug}">
-      <div class="no-data">Buscando partidos...</div>
-    </div>
+    <div class="cat-header"><h2>${cat.name}</h2></div>
+    <div class="grid" id="grid-${cat.slug}"><div class="no-data">Cargando...</div></div>
   `;
   container.appendChild(section);
 
-  // Cargamos el JSON forzando que no use la caché
-  fetch(`${cat.slug}/partidos.json?v=${version}`)
-    .then(response => {
-      if (!response.ok) throw new Error('No hay datos');
-      return response.json();
-    })
+  fetch(`${cat.slug}/partidos.json?v=${new Date().getTime()}`)
+    .then(r => r.json())
     .then(data => {
       const grid = document.getElementById(`grid-${cat.slug}`);
       grid.innerHTML = '';
-      
       const matches = data.matches || [];
       if (matches.length === 0) {
-        grid.innerHTML = '<div class="no-data">No hay partidos registrados en esta categoría.</div>';
+        grid.innerHTML = '<div class="no-data">No hay partidos próximos.</div>';
         return;
       }
-
       matches.forEach(m => {
         const card = document.createElement('div');
         card.className = 'card';
         card.innerHTML = `
           <div class="meta-top">📅 ${m.fecha_texto}</div>
-          <div class="teams">
-            ${m.local} <span class="vs">vs</span> ${m.visitante}
-          </div>
+          <div class="teams">${m.local} <span class="vs">vs</span> ${m.visitante}</div>
           <div class="result-container">
             ${m.resultado && m.resultado !== '-' ? `<span class="result">${m.resultado}</span>` : ''}
           </div>
-          <div class="bottom">
-            <span class="lugar">📍 ${m.lugar || 'Pabellón por confirmar'}</span>
-            ${m.resultado && m.resultado !== '-' ? '<span class="estado">Finalizado</span>' : ''}
-          </div>
+          <div class="lugar-box">📍 ${m.lugar || 'Pabellón por confirmar'}</div>
         `;
         grid.appendChild(card);
       });
-    })
-    .catch(err => {
-      document.getElementById(`grid-${cat.slug}`).innerHTML = '<div class="no-data">Próximamente partidos de esta categoría.</div>';
+    }).catch(() => {
+      document.getElementById(`grid-${cat.slug}`).innerHTML = '<div class="no-data">Sin datos.</div>';
     });
 });
 </script>
-
 </body>
 </html>
