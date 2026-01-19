@@ -7,7 +7,7 @@
   {
     "name": "Juvenil Femenino",
     "slug": "juvenil",
-    "url": "https://resultadosbalonmano.isquad.es/competicion.php?id_superficie=1&seleccion=0&id_categoria=XXXX&id_competicion=YYYY&id_temp=2526&id_ambito=ZZ&id_territorial=37"
+    "url": "https://resultadosbalonmano.isquad.es/competicion.php?id_superficie=1&seleccion=0&id_categoria=2656&id_competicion=210001&id_temp=2526&id_ambito=74&id_territorial=37"
   },
   {
     "name": "Cadete Femenino",
@@ -17,6 +17,6 @@
   {
     "name": "Infantil Femenino",
     "slug": "infantil",
-    "url": "https://resultadosbalonmano.isquad.es/competicion.php?id_superficie=1&seleccion=0&id_categoria=ZZZZ&id_competicion=WWWW&id_temp=2526&id_ambito=XX&id_territorial=37"
+    "url": "https://resultadosbalonmano.isquad.es/competicion.php?id_superficie=1&seleccion=0&id_categoria=2646&id_competicion=209963&id_temp=2526&id_ambito=74&id_territorial=37"
   }
 ]
