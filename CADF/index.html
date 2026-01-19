@@ -1,74 +1,55 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3COM Squad Valsequillo</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
-    <style>
-        :root { --primary: #b01c68; --dark: #4a1033; }
-        body { 
-            font-family: 'Inter', sans-serif; margin: 0; padding: 20px; color: white;
-            background: #4a1033 url('../fondo.png') no-repeat center center fixed; 
-            background-size: cover; min-height: 100vh;
-        }
-        body::before { content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: -1; }
-        .header { text-align: center; margin-bottom: 30px; }
-        .logo { max-width: 120px; margin-bottom: 10px; }
-        h1 { font-weight: 900; text-transform: uppercase; font-size: 1.5rem; margin: 10px 0; }
-        .card { 
-            background: rgba(255, 255, 255, 0.95); color: #1a1a1a; border-radius: 20px; 
-            padding: 25px; margin: 15px auto; max-width: 500px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3); border-bottom: 8px solid var(--primary);
-            text-align: center;
-        }
-        .fecha { color: var(--primary); font-weight: 800; font-size: 0.9rem; margin-bottom: 10px; display: block; }
-        .equipos { font-size: 1.2rem; font-weight: 800; color: var(--dark); margin: 10px 0; line-height: 1.2; }
-        .resultado { background: var(--dark); color: white; padding: 10px; border-radius: 10px; font-size: 1.8rem; font-weight: 900; margin: 10px 0; }
-        .lugar { font-size: 0.8rem; color: #666; margin-top: 10px; }
-        .back { text-decoration: none; color: white; font-weight: 800; background: rgba(0,0,0,0.5); padding: 10px 20px; border-radius: 50px; display: inline-block; margin-bottom: 20px; }
-    </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Cadete Femenino — 3COM Squad Valsequillo</title>
+  <style>
+    :root{--bg:#2b0f18;--card:#fff;--accent:#7b1c3a;--text:#222;--muted:#8b6a7a}
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;background:var(--bg);color:#fff;margin:0;padding:24px;display:flex;justify-content:center}
+    .wrap{max-width:920px;width:100%}
+    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+    h1{margin:0;font-size:18px;color:#fff}
+    .btn-ics{background:var(--accent);color:#fff;padding:8px 12px;border-radius:8px;text-decoration:none;font-weight:600}
+    #partidos-container{display:flex;flex-direction:column;gap:16px}
+    .card{background:var(--card);color:var(--text);border-radius:12px;padding:18px;box-shadow:0 6px 18px rgba(0,0,0,.25)}
+    .meta-top{font-size:14px;color:var(--muted);display:flex;align-items:center;gap:8px;margin-bottom:8px}
+    .teams{font-weight:700;font-size:18px;text-align:center;margin:6px 0}
+    .teams .vs{color:var(--muted);font-weight:600;margin:0 8px}
+    .result{background:var(--accent);color:#fff;padding:6px 12px;border-radius:10px;display:inline-block;font-weight:800;margin:8px auto;text-align:center}
+    .bottom{display:flex;justify-content:space-between;align-items:center;margin-top:10px;font-size:13px;color:var(--muted)}
+    .no-data{background:rgba(255,255,255,0.03);padding:20px;border-radius:10px;color:var(--muted);text-align:center}
+  </style>
 </head>
 <body>
-    <div class="header">
-        <a href="../" class="back">← VOLVER</a><br>
-        <img src="../logo.png" class="logo" alt="Logo">
-        <h1 id="titulo-cat">CARGANDO...</h1>
-    </div>
-    <div id="contenedor"></div>
+  <div class="wrap">
+    <header>
+      <h1>Cadete Femenino</h1>
+      <div><a class="btn-ics" id="ics-link" href="calendar.ics" download>Suscribirse / Descargar ICS</a></div>
+    </header>
 
-    <script>
-        async function cargar() {
-            try {
-                const res = await fetch('partidos.json');
-                const data = await res.json();
-                document.getElementById('titulo-cat').innerText = data.categoria;
-                const contenedor = document.getElementById('contenedor');
-                
-                if (data.matches.length === 0) {
-                    contenedor.innerHTML = '<div class="card"><p>No hay partidos registrados todavía.</p></div>';
-                    return;
-                }
-                
-                data.matches.forEach(m => {
-                    const div = document.createElement('div');
-                    div.className = 'card';
-                    // Ajustamos el mapeo según lo que el robot ha extraído
-                    div.innerHTML = `
-                        <span class="fecha">🗓️ ${m.visitante}</span>
-                        <div class="equipos">${m.fecha_texto.replace('VS', '')}</div>
-                        <div class="resultado">${m.local}</div>
-                        <div class="lugar">📍 ${m.resultado}</div>
-                        <div style="font-size:0.7rem; color:var(--primary); margin-top:5px; font-weight:bold;">ESTADO: ${m.lugar}</div>
-                    `;
-                    contenedor.appendChild(div);
-                });
-            } catch (e) {
-                document.getElementById('titulo-cat').innerText = "ERROR AL CARGAR DATOS";
-                document.getElementById('contenedor').innerHTML = '<div class="card"><p>No se pudieron cargar los datos. Intenta más tarde.</p></div>';
-            }
-        }
-        cargar();
-    </script>
+    <div id="partidos-container"><div class="no-data" id="loading">Cargando partidos…</div></div>
+  </div>
+
+  <script>
+    function cleanTeamName(s){ if(!s) return ""; s = s.replace(/\u00A0/g,' ').trim(); s = s.replace(/^(vs\.?\s*)/i,''); s = s.replace(/(\s*vs\.?$)/i,''); return s.trim(); }
+    function splitDateTime(raw){ if(!raw) return {date:'', time:''}; let parts = raw.split('|').map(p=>p.trim()).filter(Boolean); if(parts.length===1){ let m = parts[0].match(/^(\d{2}\/\d{2}\/\d{4})\s+(\d{1,2}:\d{2})$/); if(m) return {date:m[1], time:m[2]}; return {date:parts[0], time:''}; } return {date:parts[0]||'', time:parts[1]||''}; }
+    function formatMatchHTML(m){
+      const dt = splitDateTime(m.fecha_texto || '');
+      let local = cleanTeamName(m.local||''); let visitante = cleanTeamName(m.visitante||'');
+      if(!visitante){ let tmp = local.split(/\s+-\s+|\s+vs\.?\s+/i); if(tmp.length>=2){ local = cleanTeamName(tmp[0]); visitante = cleanTeamName(tmp[1]); } }
+      let resultado = (m.resultado || '').trim(); let estado = (m.estado && m.estado.trim()) ? m.estado.trim() : (resultado && resultado.indexOf('-')>-1 ? 'Finalizado' : ''); let lugar = (m.lugar || '').trim();
+      return `
+      <div class="card">
+        <div class="meta-top">${dt.date ? '&#128197; ' + dt.date : ''} ${dt.time ? ' | ' + dt.time : ''}</div>
+        <div class="teams"><span class="team-local">${local}</span><span class="vs">vs</span><span class="team-visitante">${visitante}</span></div>
+        ${resultado ? `<div style="text-align:center;margin-top:6px"><span class="result">${resultado}</span></div>` : ''}
+        <div class="bottom"><div>${lugar ? '📍 ' + lugar : ''}</div><div style="color:var(--muted);font-weight:700">${estado}</div></div>
+      </div>
+      `; }
+    fetch('partidos.json').then(r=>{ if(!r.ok) throw new Error('partidos.json no encontrado'); return r.json(); })
+      .then(data=>{ const container=document.getElementById('partidos-container'); container.innerHTML=''; const matches=(data.matches||data.matches===undefined&&data)?(data.matches||data):[]; if(!matches||matches.length===0){ container.innerHTML='<div class="no-data">No hay partidos para mostrar.</div>'; return; } matches.forEach(m=>container.insertAdjacentHTML('beforeend', formatMatchHTML(m))); })
+      .catch(err=>{ document.getElementById('partidos-container').innerHTML = `<div class="no-data">Error cargando partidos: ${err.message}</div>`; });
+  </script>
 </body>
 </html>
