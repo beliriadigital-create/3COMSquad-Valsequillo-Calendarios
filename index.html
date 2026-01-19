@@ -1,331 +1,116 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3COM Squad Valsequillo</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>3COM Squad Valsequillo — Calendarios</title>
+  <style>
+    :root{ --bg:#2b0f18; --card:#fff; --accent:#7b1c3a; --text:#222; --muted:#8b6a7a; }
+    body{ font-family: system-ui, sans-serif; background: var(--bg); color: #fff; margin: 0; padding: 20px; }
+    .wrap{ max-width: 800px; margin: 0 auto; }
+    .logo-header{ text-align: center; margin-bottom: 30px; }
+    .logo-header img{ max-width: 200px; }
+    
+    .cat-section { margin-bottom: 50px; }
+    .cat-header { 
+        display: flex; justify-content: space-between; align-items: center;
+        background: var(--accent); padding: 10px 20px; border-radius: 8px 8px 0 0;
+    }
+    .cat-header h2 { margin: 0; font-size: 18px; text-transform: uppercase; }
+    .btn-ver { color: #fff; text-decoration: none; font-size: 12px; border: 1px solid #fff; padding: 4px 8px; border-radius: 4px; }
 
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
-
-    <style>
-        :root {
-            --primary: #b01c68;
-            --dark: #4a1033;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            margin: 0;
-            padding: 10px;
-            color: white;
-            background: #4a1033 url('fondo.png') no-repeat center center fixed;
-            background-size: cover;
-        }
-
-        body::before {
-            content: "";
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.85);
-            z-index: -1;
-        }
-
-        .header {
-            text-align: center;
-            padding: 10px;
-        }
-
-        .logo {
-            max-width: 70px;
-        }
-
-        /* ===== CONTENEDOR CATEGORÍAS (HORIZONTAL) ===== */
-        #lista-categorias {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            justify-content: center;
-            align-items: flex-start;
-        }
-
-        .categoria-bloque {
-            width: 100%;
-            max-width: 400px;
-        }
-
-        /* ===== DESTACADO ===== */
-        .destacado {
-            background: white;
-            color: #333;
-            border-radius: 20px;
-            padding: 15px;
-            max-width: 380px;
-            margin: 0 auto 20px;
-            text-align: center;
-            border-left: 8px solid var(--primary);
-        }
-
-        .res-dest {
-            background: var(--dark);
-            color: white;
-            font-size: 1.5rem;
-            font-weight: 900;
-            padding: 5px 15px;
-            border-radius: 8px;
-            display: inline-block;
-            margin: 8px 0;
-        }
-
-        /* ===== CABECERA CATEGORÍA ===== */
-        .cat-header {
-            background: var(--primary);
-            padding: 8px 12px;
-            font-weight: 900;
-            border-radius: 10px 10px 0 0;
-            font-size: 0.7rem;
-            margin-top: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            text-transform: uppercase;
-        }
-
-        .btn-cal {
-            background: white;
-            color: var(--primary);
-            padding: 3px 8px;
-            border-radius: 4px;
-            text-decoration: none;
-            font-size: 0.6rem;
-            font-weight: 900;
-        }
-
-        /* ===== CARRUSEL ===== */
-        .carousel {
-            display: flex;
-            overflow-x: auto;
-            gap: 10px;
-            padding: 10px;
-            background: rgba(255,255,255,0.05);
-            border-radius: 0 0 10px 10px;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        /* ===== TARJETA PARTIDO ===== */
-        .card {
-            background: white;
-            color: #333;
-            min-width: 180px;
-            width: 180px;
-            padding: 12px;
-            border-radius: 10px;
-            flex-shrink: 0;
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            box-sizing: border-box;
-            overflow: hidden;
-        }
-
-        .p-fecha {
-            font-weight: 800;
-            color: var(--primary);
-            font-size: 0.7rem;
-            margin-bottom: 8px;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 3px;
-        }
-
-        .p-equipos {
-            font-weight: 700;
-            font-size: 0.65rem;
-            text-transform: uppercase;
-            line-height: 1.4;
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-
-        .p-res {
-            background: var(--dark);
-            color: white;
-            margin-top: 8px;
-            padding: 4px;
-            border-radius: 6px;
-            font-weight: 900;
-            font-size: 0.8rem;
-        }
-
-        /* ✅ FIX DEFINITIVO DEL PABELLÓN */
-        .p-lugar {
-            font-size: 0.55rem;
-            color: #666;
-            margin-top: 5px;
-            font-style: italic;
-            line-height: 1.2;
-            text-align: center;
-
-            max-width: 100%;
-            white-space: normal;
-            word-break: break-word;
-            overflow-wrap: anywhere;
-            hyphens: auto;
-        }
-
-        @media (max-width: 600px) {
-            .categoria-bloque {
-                max-width: 100%;
-            }
-        }
-    </style>
+    .grid { display: flex; flex-direction: column; gap: 15px; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 0 0 8px 8px; }
+    .card { background: var(--card); color: var(--text); border-radius: 10px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); display: flex; flex-direction: column; }
+    
+    /* FECHA ARRIBA */
+    .meta-top { font-size: 14px; color: var(--muted); margin-bottom: 10px; font-weight: 700; border-bottom: 1px solid #f0f0f0; padding-bottom: 5px; }
+    
+    /* EQUIPOS CENTRO */
+    .teams { font-weight: 700; font-size: 17px; text-align: center; margin: 10px 0; line-height: 1.4; }
+    .vs { color: var(--muted); margin: 0 5px; font-size: 14px; display: block; font-weight: 400; }
+    
+    /* RESULTADO */
+    .result-container { text-align: center; margin: 5px 0; }
+    .result { background: var(--accent); color: #fff; padding: 5px 15px; border-radius: 6px; font-weight: 800; font-size: 20px; display: inline-block; }
+    
+    /* PABELLON ABAJO */
+    .bottom { margin-top: 15px; padding-top: 10px; border-top: 1px solid #eee; }
+    .lugar { display: block; font-size: 13px; color: var(--muted); margin-bottom: 5px; line-height: 1.3; }
+    .estado { display: block; font-size: 12px; color: var(--accent); font-weight: 800; text-transform: uppercase; text-align: right; }
+    
+    .no-data { text-align: center; padding: 20px; color: var(--muted); font-style: italic; }
+  </style>
 </head>
-
 <body>
 
-    <div class="header">
-        <img src="logo.png" class="logo">
+<div class="wrap">
+  <div class="logo-header">
+    <img src="logo.png" alt="3COM Squad">
+  </div>
+
+  <div id="master-container"></div>
+</div>
+
+<script>
+const categorias = [
+  { name: "Liga Territorial Femenina", slug: "TF" },
+  { name: "Juvenil Femenino", slug: "JUVF" },
+  { name: "Cadete Femenino", slug: "CADF" },
+  { name: "Infantil Femenino", slug: "INFF" }
+];
+
+const container = document.getElementById('master-container');
+
+categorias.forEach(cat => {
+  const section = document.createElement('div');
+  section.className = 'cat-section';
+  section.innerHTML = `
+    <div class="cat-header">
+      <h2>${cat.name}</h2>
+      <a href="${cat.slug}/" class="btn-ver">CALENDARIO</a>
     </div>
+    <div class="grid" id="grid-${cat.slug}">
+      <div class="no-data">Cargando partidos...</div>
+    </div>
+  `;
+  container.appendChild(section);
 
-    <div id="destacado-container"></div>
+  fetch(`${cat.slug}/partidos.json`)
+    .then(response => response.json())
+    .then(data => {
+      const grid = document.getElementById(`grid-${cat.slug}`);
+      grid.innerHTML = '';
+      
+      const matches = data.matches || [];
+      if (matches.length === 0) {
+        grid.innerHTML = '<div class="no-data">No hay partidos próximos.</div>';
+        return;
+      }
 
-    <div id="lista-categorias"></div>
-
-    <script>
-        // ========== FUNCIONES AUXILIARES ==========
-
-        // 1️⃣ Abreviar pabellones
-        function abreviarPabellon(txt) {
-            if (!txt) return '';
-            return txt
-                .replace(/PABELLON/gi, 'PAB.')
-                .replace(/MUNICIPAL/gi, 'MUN.')
-                .replace(/INSULAR/gi, 'INS.')
-                .replace(/\s+/g, ' ')
-                .trim();
-        }
-
-        // 2️⃣ Icono casa/fuera
-        function iconoCasaFuera(local, visitante) {
-            const club = 'valsequillo';
-            const l = (local || '').toLowerCase();
-            const v = (visitante || '').toLowerCase();
-            if (l.includes(club)) return '🏠';
-            if (v.includes(club)) return '🚌';
-            return '';
-        }
-
-        // 3️⃣ Parsear fecha para ordenar
-        function parseFecha(fecha) {
-            if (!fecha || !fecha.includes('/')) return null;
-            try {
-                const partes = fecha.split('|');
-                const [dd, mm, yyyy] = partes[0].trim().split('/');
-                const tiempo = partes[1] ? partes[1].trim().split(':') : ['00', '00'];
-                const [hh, mi] = tiempo;
-                return new Date(yyyy, mm - 1, dd, hh, mi);
-            } catch (e) {
-                return null;
-            }
-        }
-
-        // ========== CARGA Y RENDERIZADO ==========
-
-        async function cargar() {
-            const res = await fetch('categories.json?v=' + Date.now());
-            const cats = await res.json();
-
-            let todos = [];
-
-            for (const c of cats) {
-                try {
-                    const rp = await fetch(`./${c.slug}/partidos.json?v=` + Date.now());
-                    const data = await rp.json();
-
-                    if (data.matches && data.matches.length > 0) {
-                        
-                        // 3️⃣ ORDENAR POR FECHA (próximos primero, sin fecha al final)
-                        data.matches.sort((a, b) => {
-                            const fa = parseFecha(a.fecha_texto);
-                            const fb = parseFecha(b.fecha_texto);
-                            if (!fa && !fb) return 0;
-                            if (!fa) return 1;
-                            if (!fb) return -1;
-                            return fa - fb;
-                        });
-
-                        let cards = '';
-
-                        data.matches.forEach(m => {
-                            todos.push({...m, cat: c.name});
-
-                            const icono = iconoCasaFuera(m.local, m.visitante);
-                            const lugarAbrev = abreviarPabellon(m.lugar);
-
-                            cards += `
-                                <div class="card">
-                                    <div class="p-fecha">${icono} ${m.fecha_texto}</div>
-                                    <div class="p-equipos">
-                                        <div>${m.local}</div>
-                                        <div style="color:#999;font-size:0.55rem;">VS</div>
-                                        <div>${m.visitante}</div>
-                                    </div>
-                                    <div class="p-res">${m.resultado || 'PRÓXIMO'}</div>
-                                    <div class="p-lugar">📍 ${lugarAbrev}</div>
-                                </div>`;
-                        });
-
-                        document.getElementById('lista-categorias').innerHTML += `
-                            <div class="categoria-bloque">
-                                <div class="cat-header">
-                                    <span>${c.name}</span>
-                                    <a href="./${c.slug}/calendar.ics" class="btn-cal">CALENDARIO</a>
-                                </div>
-                                <div class="carousel">${cards}</div>
-                            </div>`;
-                    }
-                } catch (e) {}
-            }
-
-            // ========== DESTACADO (próximo partido sin resultado) ==========
-            if (todos.length > 0) {
-                // Ordenar todos los partidos por fecha
-                todos.sort((a, b) => {
-                    const fa = parseFecha(a.fecha_texto);
-                    const fb = parseFecha(b.fecha_texto);
-                    if (!fa && !fb) return 0;
-                    if (!fa) return 1;
-                    if (!fb) return -1;
-                    return fa - fb;
-                });
-
-                // Buscar el próximo partido (sin resultado o sin marcador tipo "X-Y")
-                const p = todos.find(m => !m.resultado || !m.resultado.includes('-')) || todos[0];
-
-                const iconoDestacado = iconoCasaFuera(p.local, p.visitante);
-                const lugarDestacado = abreviarPabellon(p.lugar);
-
-                document.getElementById('destacado-container').innerHTML = `
-                    <div class="destacado">
-                        <div style="color:var(--primary);font-weight:900;font-size:0.6rem;text-transform:uppercase;">
-                            ${p.cat}
-                        </div>
-                        <div style="font-size:0.8rem;font-weight:700;margin-top:5px;">
-                            ${iconoDestacado} 🗓️ ${p.fecha_texto}
-                        </div>
-                        <h3 style="font-size:0.9rem;margin:10px 0;text-transform:uppercase;">
-                            ${p.local}<br>
-                            <span style="color:#999;font-size:0.7rem;">vs</span><br>
-                            ${p.visitante}
-                        </h3>
-                        <div class="res-dest">${p.resultado || 'VS'}</div>
-                        <div style="font-size:0.65rem;color:#666;">📍 ${lugarDestacado}</div>
-                    </div>`;
-            }
-        }
-
-        cargar();
-    </script>
+      matches.forEach(m => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <div class="meta-top">📅 ${m.fecha_texto}</div>
+          <div class="teams">
+            ${m.local} <span class="vs">vs</span> ${m.visitante}
+          </div>
+          <div class="result-container">
+            ${m.resultado ? `<span class="result">${m.resultado}</span>` : ''}
+          </div>
+          <div class="bottom">
+            <span class="lugar">📍 ${m.lugar || 'Pabellón por confirmar'}</span>
+            <span class="estado">${m.resultado ? 'Finalizado' : ''}</span>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    })
+    .catch(err => {
+      document.getElementById(`grid-${cat.slug}`).innerHTML = '<div class="no-data">Sin datos disponibles.</div>';
+    });
+});
+</script>
 
 </body>
 </html>
