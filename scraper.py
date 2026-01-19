@@ -20,7 +20,6 @@ def normalize_score(s: str) -> str:
     s = clean(s)
     if not is_score(s):
         return ""
-    # deja "40 - 17" como "40-17"
     return re.sub(r"\s*-\s*", "-", s)
 
 def row_mentions_club(text: str) -> bool:
@@ -56,60 +55,47 @@ def scrape_categoria(cat):
         if len(tds) < 4:
             continue
 
-        c0 = clean(tds[0].get_text(" ", strip=True))
+        celdas = [clean(td.get_text(" ", strip=True)) for td in tds]
 
-        # FORMATO NUEVO (Juvenil/Cadete/Infantil):
-        # [0]=EQUIPOS, [1]=MARCADOR, [2]=FECHA (puede estar vacío), [3]=LUGAR, [4]=ESTADO (si existe)
-        # Lo detectamos porque la celda EQUIPOS empieza por "VS" y contiene " - "
-        if re.search(r"\bVS\b", c0, flags=re.I) and (" - " in c0 or "-" in c0):
-            equipos_txt = c0
-            marcador_txt = clean(tds[1].get_text(" ", strip=True))
-            fecha_txt = clean(tds[2].get_text(" ", strip=True))  # puede venir ""
-            lugar_txt = clean(tds[3].get_text(" ", strip=True))
-            estado_txt = clean(tds[4].get_text(" ", strip=True)) if len(tds) > 4 else ""
+        # Detectar formato por número de columnas y contenido
+        if len(celdas) >= 5 and ("VS" in celdas[0].upper() or " - " in celdas[0]):
+            # Formato Juvenil/Cadete/Infantil
+            equipos_txt = celdas[0]
+            marcador_txt = celdas[1]
+            fecha_txt = celdas[2]
+            lugar_txt = celdas[3]
+            estado_txt = celdas[4] if len(celdas) > 4 else ""
 
             local, visitante = parse_equipos_cell(equipos_txt)
             resultado = normalize_score(marcador_txt)
 
-            # Si no hay marcador y el estado existe (Retirado/Pendiente/etc.), lo mostramos como resultado “visible”
             if not resultado and estado_txt:
                 resultado = estado_txt.upper()
 
             matches.append({
-                "fecha_texto": fecha_txt,   # puede ser ""
+                "fecha_texto": fecha_txt,
                 "local": local,
                 "visitante": visitante,
-                "resultado": resultado,     # score o ESTADO en mayúsculas
+                "resultado": resultado,
                 "lugar": lugar_txt,
                 "estado": estado_txt
             })
-            continue
-
-        # FORMATO TERRITORIAL (TF) / otros:
-        # Intento simple por posiciones: fecha/local/visitante/resultado/(lugar)
-        d0 = clean(tds[0].get_text(" ", strip=True))
-        d1 = clean(tds[1].get_text(" ", strip=True))
-        d2 = clean(tds[2].get_text(" ", strip=True))
-        d3 = clean(tds[3].get_text(" ", strip=True))
-        d4 = clean(tds[4].get_text(" ", strip=True)) if len(tds) > 4 else ""
-
-        if is_score(d0) and ("/" in d2):
-            # caso raro: resultado en d0 y fecha en d2
-            matches.append({
-                "fecha_texto": d2,
-                "local": d1,
-                "visitante": "3COM Squad Valsequillo",
-                "resultado": normalize_score(d0),
-                "lugar": d3 or d4,
-                "estado": ""
-            })
         else:
+            # Formato Territorial u otros
+            fecha_txt = celdas[0]
+            local_txt = celdas[1]
+            visitante_txt = celdas[2]
+            resultado_txt = celdas[3] if len(celdas) > 3 else ""
+            lugar_txt = celdas[4] if len(celdas) > 4 else ""
+
+            resultado = normalize_score(resultado_txt) or resultado_txt
+
             matches.append({
-                "fecha_texto": d0,
-                "local": d1,
-                "visitante": d2,
-                "resultado": normalize_score(d3) or d3,
-                "lugar": d4,
+                "fecha_texto": fecha_txt,
+                "local": local_txt,
+                "visitante": visitante_txt,
+                "resultado": resultado,
+                "lugar": lugar_txt,
                 "estado": ""
             })
 
@@ -131,7 +117,7 @@ def scrape_categoria(cat):
             f"SUMMARY:{summary}",
             f"DTSTART:{dt.strftime('%Y%m%dT%H%M%S')}",
             f"DTEND:{(dt + timedelta(minutes=90)).strftime('%Y%m%dT%H%M%S')}",
-            f"LOCATION:{m.get("lugar","")}",
+            f"LOCATION:{m.get('lugar','')}",
             "END:VEVENT"
         ]
     lines.append("END:VCALENDAR")
