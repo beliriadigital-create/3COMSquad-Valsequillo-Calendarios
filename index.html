@@ -305,9 +305,6 @@
                 const iconoDestacado = iconoCasaFuera(p.local, p.visitante);
                 const lugarDestacado = abreviarPabellon(p.lugar);
 
-                // --------- Aquí la mejora: mostramos "PRÓXIMO" si no hay resultado válido
-                const textoResultadoDestacado = (p.resultado && p.resultado !== 'VS') ? p.resultado : 'PRÓXIMO';
-
                 document.getElementById('destacado-container').innerHTML = `
                     <div class="destacado">
                         <div style="color:var(--primary);font-weight:900;font-size:0.6rem;text-transform:uppercase;">
@@ -321,7 +318,7 @@
                             <span style="color:#999;font-size:0.7rem;">vs</span><br>
                             ${p.visitante}
                         </h3>
-                        <div class="res-dest">${textoResultadoDestacado}</div>
+                        <div class="res-dest">${p.resultado || 'VS'}</div>
                         <div style="font-size:0.65rem;color:#666;">📍 ${lugarDestacado}</div>
                     </div>`;
             }
