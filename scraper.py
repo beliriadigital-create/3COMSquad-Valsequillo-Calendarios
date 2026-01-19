@@ -2,8 +2,8 @@ import json, os, re, requests
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
 
-# Mejor filtro: ambas palabras deben aparecer en la fila (en minúsculas)
-CLUB_KEYS = ["3com", "valsequillo"]
+# Ahora buscamos cualquiera de estas palabras para no fallar
+CLUB_KEYS = ["3com", "valsequillo", "squad"]
 
 def clean(s: str) -> str:
     return " ".join(s.replace("\xa0", " ").split()).strip()
@@ -19,33 +19,38 @@ def scrape_categoria(cat):
         r.encoding = "utf-8"
         soup = BeautifulSoup(r.text, "html.parser")
         
+        # Buscamos todas las filas de la tabla
         for tr in soup.find_all("tr"):
-            tds = tr.find_all("td")
-            if len(tds) < 4: 
-                continue
-            
             texto_fila = tr.get_text(" ", strip=True).lower()
-            # Cambiado filtro: ambas palabras deben estar en la fila
-            if not all(k in texto_fila for k in CLUB_KEYS):
+            
+            # Si no menciona nuestro club, saltamos a la siguiente fila
+            if not any(k in texto_fila for k in CLUB_KEYS):
                 continue
 
+            tds = tr.find_all("td")
+            if len(tds) < 3: continue
+            
             celdas = [clean(td.get_text(" ", strip=True)) for td in tds]
             
-            # Detectar formato: Territorial (Fecha en celda 0) vs Base (Equipos en celda 0)
+            # --- LÓGICA DE EXTRACCIÓN ---
             if re.search(r"\d{2}/\d{2}/\d{4}", celdas[0]):
-                # FORMATO TERRITORIAL
+                # Formato Territorial
                 fecha, local, visitante, resultado = celdas[0], celdas[1], celdas[2], celdas[3]
                 lugar = celdas[4] if len(celdas) > 4 else ""
             else:
-                # FORMATO JUVENIL/CADETE/INFANTIL
-                equipos, resultado, fecha = celdas[0], celdas[1], celdas[2]
+                # Formato Base (Juvenil, Cadete, Infantil)
+                # En base: Celda 0=Equipos, Celda 1=Resultado, Celda 2=Fecha, Celda 3=Hora, Celda 4=Lugar
+                equipos = celdas[0]
+                resultado = celdas[1]
+                fecha = celdas[2]
                 hora = celdas[3] if len(celdas) > 3 else ""
                 lugar = celdas[4] if len(celdas) > 4 else ""
                 
+                # Separar equipos
                 if " - " in equipos:
                     local, visitante = equipos.split(" - ", 1)
-                elif " VS " in equipos.upper():
-                    local, visitante = re.split(r" VS ", equipos, flags=re.I)
+                elif " vs " in equipos.lower():
+                    local, visitante = re.split(r" vs ", equipos, flags=re.I)
                 else:
                     local, visitante = equipos, ""
                 
@@ -54,43 +59,22 @@ def scrape_categoria(cat):
 
             matches.append({
                 "fecha_texto": fecha,
-                "local": local.strip(),
-                "visitante": visitante.strip(),
+                "local": local,
+                "visitante": visitante,
                 "resultado": resultado,
-                "lugar": lugar,
-                "estado": ""
+                "lugar": lugar
             })
 
-        # Guardar JSON
         with open(f"{slug}/partidos.json", "w", encoding="utf-8") as f:
             json.dump({"matches": matches}, f, ensure_ascii=False, indent=2)
-        
-        # Generar ICS (Calendario)
-        lines = ["BEGIN:VCALENDAR", "VERSION:2.0", f"X-WR-CALNAME:{cat['name']}"]
-        for m in matches:
-            try:
-                raw_f = m["fecha_texto"].replace(" | ", " ")
-                dt = datetime.strptime(raw_f, "%d/%m/%Y %H:%M")
-                lines += ["BEGIN:VEVENT", f"SUMMARY:{m['local']} vs {m['visitante']}",
-                          f"DTSTART:{dt.strftime('%Y%m%dT%H%M%S')}",
-                          f"DTEND:{(dt + timedelta(minutes=90)).strftime('%Y%m%dT%H%M%S')}",
-                          f"LOCATION:{m['lugar']}", "END:VEVENT"]
-            except: 
-                continue
-        lines.append("END:VCALENDAR")
-        with open(f"{slug}/calendar.ics", "w", encoding="utf-8") as f:
-            f.write("\n".join(lines))
             
         print(f"EXITO: {slug} actualizado con {len(matches)} partidos.")
     except Exception as e:
         print(f"ERROR en {slug}: {e}")
 
 def main():
-    if not os.path.exists("categories.json"):
-        print("Error: No existe categories.json")
-        return
     with open("categories.json", "r", encoding="utf-8") as f:
-        for cat in json.load(f): 
+        for cat in json.load(f):
             scrape_categoria(cat)
 
 if __name__ == "__main__":
