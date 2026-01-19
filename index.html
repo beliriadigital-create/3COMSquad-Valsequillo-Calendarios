@@ -3,160 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3COM Squad Valsequillo - Calendarios</title>
+    <title>3COM Squad Valsequillo</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root { --primary: #b01c68; --dark: #4a1033; }
         body { 
             font-family: 'Inter', sans-serif; margin: 0; padding: 20px; color: white;
-            background: #4a1033 url('fondo.png') no-repeat center center fixed; 
-            background-size: cover; min-height: 100vh;
+            background: #4a1033 url('fondo.png') no-repeat center center fixed; background-size: cover;
         }
-        body::before { content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); z-index: -1; }
-        .header { text-align: center; margin-bottom: 20px; }
-        .logo { max-width: 100px; margin-bottom: 10px; }
-        h1 { font-weight: 900; text-transform: uppercase; font-size: 1.4rem; margin: 0; }
-
-        .destacado-container { max-width: 800px; margin: 0 auto 30px auto; }
+        body::before { content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: -1; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .logo { max-width: 800px; width: 100%; height: auto; }
+        
         .destacado-card { 
-            background: white; color: #1a1a1a; border-radius: 20px; padding: 25px;
-            border-left: 10px solid var(--primary); box-shadow: 0 15px 35px rgba(0,0,0,0.4);
-            text-align: center;
+            background: white; color: #1a1a1a; border-radius: 20px; padding: 20px;
+            max-width: 600px; margin: 0 auto 40px; text-align: center; border-left: 10px solid var(--primary);
         }
-        .destacado-tag { background: var(--primary); color: white; padding: 6px 18px; border-radius: 50px; font-size: 0.75rem; font-weight: 900; text-transform: uppercase; display: inline-block; margin-bottom: 12px; }
-        .fecha-d { color: var(--primary); font-weight: 800; font-size: 1.1rem; margin: 8px 0; display: block; }
-        .equipo { font-size: 1.15rem; font-weight: 900; color: var(--dark); margin: 5px 0; text-transform: uppercase; }
-        .vs { font-size: 0.9rem; font-weight: 600; color: #999; margin: 5px 0; }
-        .resultado-grande { background: var(--dark); color: white; padding: 10px 25px; border-radius: 12px; font-size: 2.2rem; font-weight: 900; margin: 15px 0; display: inline-block; }
-        .lugar-d { font-size: 0.85rem; color: #666; margin-top: 12px; font-weight: 500; }
+        .destacado-tag { background: var(--primary); color: white; padding: 5px 15px; border-radius: 50px; font-size: 0.8rem; font-weight: 900; }
+        .resultado-box { background: var(--dark); color: white; font-size: 2.5rem; font-weight: 900; padding: 10px 20px; border-radius: 10px; display: inline-block; margin: 15px 0; }
 
-        .grid-categorias { 
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); 
-            gap: 15px; max-width: 900px; margin: 0 auto; 
-        }
-        .card-cat { 
-            background: rgba(255, 255, 255, 0.9); color: #1a1a1a; border-radius: 15px; 
-            padding: 15px; text-decoration: none; text-align: center;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2); border-bottom: 4px solid var(--primary);
-            transition: 0.2s;
-        }
-        .card-cat:hover { transform: translateY(-5px); background: white; }
-        .cat-name { font-weight: 800; font-size: 0.9rem; color: var(--dark); display: block; }
+        .cat-section { max-width: 800px; margin: 0 auto 20px; background: rgba(255,255,255,0.1); border-radius: 15px; overflow: hidden; }
+        .cat-header { background: var(--primary); padding: 15px; font-weight: 900; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+        .btn-cal { background: white; color: var(--primary); padding: 5px 10px; border-radius: 5px; text-decoration: none; font-size: 0.7rem; font-weight: 900; }
+        
+        .partido-row { background: white; color: #333; margin: 10px; padding: 15px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; }
+        .p-fecha { font-weight: 800; color: var(--primary); min-width: 110px; }
+        .p-equipos { flex-grow: 1; font-weight: 700; padding: 0 10px; }
+        .p-res { background: #eee; padding: 5px 10px; border-radius: 5px; font-weight: 900; }
     </style>
 </head>
 <body>
-    <div class="header">
-        <img src="logo.png" class="logo" alt="Logo">
-        <h1>3COM Squad Valsequillo</h1>
-    </div>
-
-    <div class="destacado-container" id="destacado-area"></div>
-
-    <h2 style="text-align:center; font-size: 1rem; text-transform: uppercase; opacity: 0.8; margin-bottom: 15px;">Todas las Categorías</h2>
-    <div id="menu-categorias" class="grid-categorias"></div>
+    <div class="header"><img src="logo.png" class="logo"></div>
+    <div id="destacado"></div>
+    <div id="categorias-lista"></div>
 
     <script>
-        function limpiarFecha(texto) {
-            if (!texto) return "";
-            
-            // Convertir a string y normalizar espacios
-            let t = String(texto).replace(/\s+/g, " ").trim();
-            
-            // Caso típico iSquad: DD/MM/AAAAHH:MM (pegado sin espacio)
-            t = t.replace(/(\d{2}\/\d{2}\/\d{4})(\d{1,2}:\d{2})/, "$1 | $2");
-            
-            // Si ya tiene separador pero mal formateado
-            t = t.replace(/(\d{2}\/\d{2}\/\d{4})\s*\|\s*(\d{1,2}:\d{2})/, "$1 | $2");
-            
-            // Limpiar "VS" si aparece
-            t = t.replace('VS', '').trim();
-            
-            return t;
-        }
+        async function cargar() {
+            const res = await fetch('categories.json?v=' + Date.now());
+            const cats = await res.json();
+            const lista = document.getElementById('categorias-lista');
+            let todosLosPartidos = [];
 
-        function parsearFecha(texto) {
-            if (!texto) return 0;
-            const match = texto.match(/(\d{2})\/(\d{2})\/(\d{4})/);
-            if (!match) return 0;
-            // Crea un número AAAAMMDD para comparar fácilmente
-            return parseInt(match[3] + match[2] + match[1]);
-        }
-
-        async function iniciar() {
-            const menu = document.getElementById('menu-categorias');
-            const destacadoArea = document.getElementById('destacado-area');
-            
-            try {
-                const res = await fetch('categories.json?v=' + Date.now());
-                const categorias = await res.json();
-                let proximosPartidos = [];
-                let ultimosResultados = [];
-
-                for (const cat of categorias) {
-                    const a = document.createElement('a');
-                    a.href = './' + cat.slug + '/';
-                    a.className = 'card-cat';
-                    a.innerHTML = `<span class="cat-name">${cat.name}</span>`;
-                    menu.appendChild(a);
-
-                    try {
-                        const resP = await fetch(`./${cat.slug}/partidos.json?v=` + Date.now());
-                        const dataP = await resP.json();
-                        if (dataP.matches && dataP.matches.length > 0) {
-                            dataP.matches.forEach(m => {
-                                const tieneRes = (m.local && m.local.includes('-')) || (m.resultado && m.resultado.includes('-'));
-                                const info = { ...m, catName: cat.name, slug: cat.slug, fechaNum: parsearFecha(m.fecha_texto || m.visitante) };
-                                
-                                if (tieneRes) ultimosResultados.push(info);
-                                else proximosPartidos.push(info);
-                            });
-                        }
-                    } catch (e) { console.log("Sin datos para " + cat.slug); }
-                }
-
-                // Ordenar próximos por fecha (el más cercano primero)
-                proximosPartidos.sort((a, b) => a.fechaNum - b.fechaNum);
-                // Ordenar resultados por fecha (el más reciente primero)
-                ultimosResultados.sort((a, b) => b.fechaNum - a.fechaNum);
-
-                const p = proximosPartidos.length > 0 ? proximosPartidos[0] : ultimosResultados[0];
-
-                if (p) {
-                    const tieneResultado = (p.local && p.local.includes('-')) || (p.resultado && p.resultado.includes('-'));
-                    const etiqueta = tieneResultado ? "ÚLTIMO RESULTADO" : "PRÓXIMO PARTIDO";
+            for (const c of cats) {
+                try {
+                    const rp = await fetch(`./${c.slug}/partidos.json?v=` + Date.now());
+                    const data = await rp.json();
                     
-                    let equipoLocal, equipoVisitante, fechaRaw, resultado, lugar;
-                    
-                    if (p.slug === "TF" && tieneResultado) {
-                        const equipos = p.fecha_texto.replace('VS', '').split('-');
-                        equipoLocal = equipos[0]?.trim();
-                        equipoVisitante = equipos[1]?.trim();
-                        fechaRaw = p.visitante;
-                        resultado = p.local;
-                        lugar = p.resultado;
-                    } else {
-                        equipoLocal = p.local;
-                        equipoVisitante = p.visitante;
-                        fechaRaw = p.fecha_texto;
-                        resultado = (p.resultado && p.resultado.includes('-')) ? p.resultado : "";
-                        lugar = p.lugar || p.resultado;
-                    }
+                    let htmlPartidos = '';
+                    data.matches.forEach(m => {
+                        todosLosPartidos.push({...m, cat: c.name});
+                        htmlPartidos += `
+                            <div class="partido-row">
+                                <div class="p-fecha">${m.fecha_texto || m.visitante}</div>
+                                <div class="p-equipos">${m.local} vs ${m.visitante}</div>
+                                <div class="p-res">${m.resultado || 'vs'}</div>
+                            </div>`;
+                    });
 
-                    destacadoArea.innerHTML = `
-                        <div class="destacado-card">
-                            <span class="destacado-tag">${etiqueta}: ${p.catName}</span>
-                            <span class="fecha-d">🗓️ ${limpiarFecha(fechaRaw)}</span>
-                            <div class="equipo">${equipoLocal}</div>
-                            <div class="vs">vs</div>
-                            <div class="equipo">${equipoVisitante}</div>
-                            ${resultado ? `<div class="resultado-grande">${resultado}</div>` : ''}
-                            <div class="lugar-d">📍 ${lugar}</div>
-                        </div>
-                    `;
-                }
-            } catch (e) { console.error(e); }
+                    lista.innerHTML += `
+                        <div class="cat-section">
+                            <div class="cat-header">
+                                <span>${c.name}</span>
+                                <a href="./${c.slug}/calendar.ics" class="btn-cal">📅 AÑADIR AL CALENDARIO</a>
+                            </div>
+                            <div class="cat-body">${htmlPartidos || '<p style="padding:10px">No hay partidos listados</p>'}</div>
+                        </div>`;
+                } catch(e) {}
+            }
+            
+            // Pintar el primero como destacado (ejemplo simple)
+            if(todosLosPartidos.length > 0) {
+                const p = todosLosPartidos[0];
+                document.getElementById('destacado').innerHTML = `
+                    <div class="destacado-card">
+                        <span class="destacado-tag">${p.cat}</span><br><br>
+                        <strong>${p.fecha_texto || p.visitante}</strong>
+                        <h3>${p.local} vs ${p.visitante}</h3>
+                        <div class="resultado-box">${p.resultado || 'VS'}</div>
+                        <p>📍 ${p.lugar}</p>
+                    </div>`;
+            }
         }
-        iniciar();
+        cargar();
     </script>
 </body>
 </html>
