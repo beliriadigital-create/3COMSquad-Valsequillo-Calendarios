@@ -3,64 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3COM Squad Valsequillo</title>
+    <title>3COM VALSEQUILLO - HORIZONTAL</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root { --primary: #b01c68; --dark: #4a1033; }
         body { 
-            font-family: 'Inter', sans-serif; margin: 0; padding: 15px; color: white;
+            font-family: 'Inter', sans-serif; margin: 0; padding: 10px; color: white;
             background: #4a1033 url('fondo.png') no-repeat center center fixed; background-size: cover;
         }
-        body::before { content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); z-index: -1; }
-        
-        .header { text-align: center; margin-bottom: 20px; }
-        .logo { max-width: 100px; height: auto; margin-bottom: 10px; }
-        h1 { font-size: 1.1rem; text-transform: uppercase; font-weight: 900; margin: 0; letter-spacing: 1px; }
+        body::before { content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: -1; }
+        .header { text-align: center; padding: 10px; }
+        .logo { max-width: 90px; }
+        h1 { font-size: 1rem; text-transform: uppercase; margin: 5px 0 20px; }
 
-        /* Tarjeta Principal */
-        .destacado-card { 
-            background: white; color: #1a1a1a; border-radius: 20px; padding: 20px;
-            max-width: 500px; margin: 0 auto 30px; text-align: center; border-left: 8px solid var(--primary);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        /* SECCIÓN DE CATEGORÍA */
+        .cat-container { margin-bottom: 30px; width: 100%; }
+        .cat-title { 
+            background: var(--primary); padding: 10px 15px; font-weight: 900; 
+            display: flex; justify-content: space-between; align-items: center;
+            border-radius: 10px 10px 0 0; font-size: 0.85rem;
         }
-        .destacado-tag { background: var(--primary); color: white; padding: 4px 12px; border-radius: 50px; font-size: 0.7rem; font-weight: 900; text-transform: uppercase; }
-        .res-grande { background: var(--dark); color: white; font-size: 2rem; font-weight: 900; padding: 8px 20px; border-radius: 12px; display: inline-block; margin: 10px 0; }
-        .fecha-dest { color: var(--primary); font-weight: 800; font-size: 0.95rem; display: block; margin-top: 10px; }
+        .btn-cal { background: white; color: var(--primary); padding: 4px 10px; border-radius: 5px; text-decoration: none; font-size: 0.65rem; font-weight: 900; }
 
-        /* Secciones de Categoría */
-        .cat-section { max-width: 1000px; margin: 0 auto 25px; }
-        .cat-header { 
-            padding: 0 10px 10px; font-weight: 900; display: flex; 
-            justify-content: space-between; align-items: center; font-size: 0.9rem;
-            border-bottom: 2px solid rgba(255,255,255,0.1); margin-bottom: 10px;
-        }
-        .btn-cal { background: var(--primary); color: white; padding: 5px 10px; border-radius: 6px; text-decoration: none; font-size: 0.6rem; font-weight: 900; }
-
-        /* CONTENEDOR HORIZONTAL */
-        .cat-body { 
-            display: flex; 
-            overflow-x: auto; 
+        /* EL CARRUSEL HORIZONTAL */
+        .carousel { 
+            display: flex !important; 
+            flex-direction: row !important; 
+            flex-wrap: nowrap !important;
+            overflow-x: auto !important; 
             gap: 15px; 
-            padding: 5px 5px 15px 5px;
-            scroll-snap-type: x mandatory;
+            padding: 15px 10px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 0 0 10px 10px;
             -webkit-overflow-scrolling: touch;
+            scroll-snap-type: x mandatory;
         }
-        /* Ocultar barra de scroll en algunos navegadores */
-        .cat-body::-webkit-scrollbar { height: 5px; }
-        .cat-body::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
-
-        /* Tarjeta de Partido Individual (Horizontal) */
-        .partido-card { 
-            background: white; color: #333; min-width: 220px; max-width: 220px;
-            padding: 15px; border-radius: 15px; scroll-snap-align: start;
-            flex-shrink: 0; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            display: flex; flex-direction: column; justify-content: space-between;
+        /* Tarjeta de partido */
+        .card { 
+            background: white; color: #333; 
+            min-width: 240px; width: 240px;
+            padding: 15px; border-radius: 12px; 
+            flex-shrink: 0; scroll-snap-align: start;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
             text-align: center;
         }
-        .p-fecha { font-weight: 800; color: var(--primary); font-size: 0.8rem; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
-        .p-equipos { font-weight: 700; font-size: 0.8rem; text-transform: uppercase; flex-grow: 1; display: flex; flex-direction: column; justify-content: center; gap: 5px; }
-        .p-res { background: var(--dark); color: white; margin-top: 10px; padding: 5px; border-radius: 8px; font-weight: 900; font-size: 1rem; }
-        .vs-text { color: #999; font-size: 0.7rem; }
+        .p-fecha { font-weight: 800; color: var(--primary); font-size: 0.85rem; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        .p-equipos { font-weight: 700; font-size: 0.85rem; text-transform: uppercase; min-height: 60px; display: flex; flex-direction: column; justify-content: center; }
+        .p-res { background: var(--dark); color: white; margin-top: 10px; padding: 6px; border-radius: 8px; font-weight: 900; }
     </style>
 </head>
 <body>
@@ -68,71 +57,60 @@
         <img src="logo.png" class="logo">
         <h1>3COM Squad Valsequillo</h1>
     </div>
-    <div id="destacado"></div>
-    <div id="categorias-lista"></div>
+    <div id="lista-categorias"></div>
 
     <script>
-        function formatearFecha(texto) {
+        function arreglarFecha(texto) {
             if (!texto) return "";
-            // Separa DD/MM/AAAA de HH:MM si están pegados
-            let t = String(texto).replace(/(\d{2}\/\d{2}\/\d{4})(\d{2}:\d{2})/, '$1 | $2');
+            let t = String(texto).trim();
+            // Si detecta el formato pegado DD/MM/AAAAHH:MM lo separa
+            t = t.replace(/(\d{2}\/\d{2}\/\d{4})(\d{2}:\d{2})/, '$1 | $2');
+            // Si no estaba pegado pero no tiene la barra, se la ponemos para que se vea mejor
+            if (t.includes('/') && t.includes(':') && !t.includes('|')) {
+                t = t.replace(' ', ' | ');
+            }
             return t.replace('VS', '').trim();
         }
 
-        async function cargar() {
-            const res = await fetch('categories.json?v=' + Date.now());
-            const cats = await res.json();
-            const lista = document.getElementById('categorias-lista');
-            let todosLosPartidos = [];
+        async function cargarDatos() {
+            const container = document.getElementById('lista-categorias');
+            try {
+                const res = await fetch('categories.json?v=' + Date.now());
+                const cats = await res.json();
 
-            for (const c of cats) {
-                try {
-                    const rp = await fetch(`./${c.slug}/partidos.json?v=` + Date.now());
-                    const data = await rp.json();
-                    
-                    let htmlPartidos = '';
-                    data.matches.forEach(m => {
-                        const fLimpia = formatearFecha(m.fecha_texto || m.visitante);
-                        todosLosPartidos.push({...m, cat: c.name, fLimpia});
+                for (const c of cats) {
+                    try {
+                        const rp = await fetch(`./${c.slug}/partidos.json?v=` + Date.now());
+                        const data = await rp.json();
                         
-                        htmlPartidos += `
-                            <div class="partido-card">
-                                <div class="p-fecha">🗓️ ${fLimpia}</div>
-                                <div class="p-equipos">
-                                    <span>${m.local}</span>
-                                    <span class="vs-text">vs</span>
-                                    <span>${m.visitante}</span>
-                                </div>
-                                <div class="p-res">${m.resultado && m.resultado.includes('-') ? m.resultado : 'PRÓXIMO'}</div>
-                            </div>`;
-                    });
+                        if (data.matches && data.matches.length > 0) {
+                            let cardsHTML = '';
+                            data.matches.forEach(m => {
+                                const fecha = arreglarFecha(m.fecha_texto || m.visitante);
+                                cardsHTML += `
+                                    <div class="card">
+                                        <div class="p-fecha">🗓️ ${fecha}</div>
+                                        <div class="p-equipos">
+                                            ${m.local}<br><span style="color:#999;font-size:0.7rem">vs</span><br>${m.visitante}
+                                        </div>
+                                        <div class="p-res">${m.resultado && m.resultado.includes('-') ? m.resultado : 'PRÓXIMO'}</div>
+                                    </div>`;
+                            });
 
-                    lista.innerHTML += `
-                        <div class="cat-section">
-                            <div class="cat-header">
-                                <span>${c.name}</span>
-                                <a href="./${c.slug}/calendar.ics" class="btn-cal">📅 CALENDARIO</a>
-                            </div>
-                            <div class="cat-body">${htmlPartidos || '<p style="opacity:0.5; font-size:0.8rem;">No hay partidos</p>'}</div>
-                        </div>`;
-                } catch(e) {}
-            }
-            
-            if(todosLosPartidos.length > 0) {
-                // Buscamos el primer partido que no tenga resultado (el próximo)
-                let p = todosLosPartidos.find(m => !m.resultado || !m.resultado.includes('-')) || todosLosPartidos[0];
-                
-                document.getElementById('destacado').innerHTML = `
-                    <div class="destacado-card">
-                        <span class="destacado-tag">${p.cat}</span>
-                        <span class="fecha-dest">🗓️ ${p.fLimpia}</span>
-                        <h3 style="margin:10px 0; text-transform:uppercase; font-size:1rem;">${p.local} <br><small style="color:#999">vs</small><br> ${p.visitante}</h3>
-                        <div class="res-grande">${p.resultado && p.resultado.includes('-') ? p.resultado : 'VS'}</div>
-                        <p style="font-size:0.75rem; color:#666; margin:0;">📍 ${p.lugar || 'Pabellón Municipal'}</p>
-                    </div>`;
-            }
+                            container.innerHTML += `
+                                <div class="cat-container">
+                                    <div class="cat-title">
+                                        <span>${c.name}</span>
+                                        <a href="./${c.slug}/calendar.ics" class="btn-cal">📅 CALENDARIO</a>
+                                    </div>
+                                    <div class="carousel">${cardsHTML}</div>
+                                </div>`;
+                        }
+                    } catch(e) { console.log("Error cargando " + c.slug); }
+                }
+            } catch(e) { console.error("Error general", e); }
         }
-        cargar();
+        cargarDatos();
     </script>
 </body>
 </html>
