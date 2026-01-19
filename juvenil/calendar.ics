@@ -3,6 +3,6 @@ VERSION:2.0
 PRODID:-//3COM Squad Valsequillo//Calendarios//ES
 CALSCALE:GREGORIAN
 METHOD:PUBLISH
-X-WR-CALNAME:Juvenil
+X-WR-CALNAME:Juvenil Femenino
 X-WR-TIMEZONE:Atlantic/Canary
 END:VCALENDAR
