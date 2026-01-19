@@ -12,15 +12,15 @@
         .header { text-align: center; padding: 10px; }
         .logo { max-width: 80px; }
         
-        /* TARJETA PRINCIPAL */
-        .destacado { background: white; color: #333; border-radius: 20px; padding: 20px; max-width: 450px; margin: 0 auto 25px; text-align: center; border-left: 8px solid var(--primary); box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        .destacado { background: white; color: #333; border-radius: 20px; padding: 20px; max-width: 400px; margin: 0 auto 25px; text-align: center; border-left: 8px solid var(--primary); box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
         .res-dest { background: var(--dark); color: white; font-size: 1.8rem; font-weight: 900; padding: 5px 20px; border-radius: 10px; display: inline-block; margin: 10px 0; }
 
-        /* CARRUSELES */
-        .cat-header { background: var(--primary); padding: 8px 15px; font-weight: 900; border-radius: 10px 10px 0 0; font-size: 0.7rem; margin-top: 20px; text-transform: uppercase; }
+        .cat-header { background: var(--primary); padding: 10px 15px; font-weight: 900; border-radius: 10px 10px 0 0; font-size: 0.75rem; margin-top: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .btn-cal { background: white; color: var(--primary); padding: 4px 8px; border-radius: 5px; text-decoration: none; font-size: 0.6rem; font-weight: 900; }
+        
         .carousel { display: flex; overflow-x: auto; gap: 12px; padding: 12px 10px; background: rgba(255,255,255,0.05); border-radius: 0 0 10px 10px; -webkit-overflow-scrolling: touch; }
         .card { background: white; color: #333; min-width: 190px; width: 190px; padding: 12px; border-radius: 12px; flex-shrink: 0; text-align: center; display: flex; flex-direction: column; justify-content: space-between; }
-        .p-fecha { font-weight: 800; color: var(--primary); font-size: 0.7rem; margin-bottom: 8px; border-bottom: 1px solid #eee; }
+        .p-fecha { font-weight: 800; color: var(--primary); font-size: 0.7rem; margin-bottom: 8px; border-bottom: 1px solid #eee; padding-bottom: 4px; }
         .p-equipos { font-weight: 700; font-size: 0.65rem; text-transform: uppercase; line-height: 1.2; }
         .p-res { background: var(--dark); color: white; margin-top: 8px; padding: 4px; border-radius: 6px; font-weight: 900; font-size: 0.8rem; }
     </style>
@@ -52,13 +52,19 @@
                                     <div class="p-res">${m.resultado && m.resultado.includes('-') ? m.resultado : 'PRÓXIMO'}</div>
                                 </div>`;
                         });
-                        lista.innerHTML += `<div><div class="cat-header">${c.name}</div><div class="carousel">${cards}</div></div>`;
+                        lista.innerHTML += `
+                            <div>
+                                <div class="cat-header">
+                                    <span>${c.name}</span>
+                                    <a href="./${c.slug}/calendar.ics" class="btn-cal">📅 CALENDARIO</a>
+                                </div>
+                                <div class="carousel">${cards}</div>
+                            </div>`;
                     }
                 } catch(e) {}
             }
 
             if (todosLosPartidos.length > 0) {
-                // El primer partido de la lista será el destacado
                 const p = todosLosPartidos[0];
                 document.getElementById('destacado-container').innerHTML = `
                     <div class="destacado">
