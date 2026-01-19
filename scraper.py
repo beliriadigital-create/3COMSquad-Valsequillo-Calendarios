@@ -2,7 +2,7 @@ import json, os, re, requests
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
 
-# Ahora buscamos cualquiera de estas palabras para no fallar
+# Filtro flexible para capturar todas las categorías
 CLUB_KEYS = ["3com", "valsequillo", "squad"]
 
 def clean(s: str) -> str:
@@ -19,11 +19,10 @@ def scrape_categoria(cat):
         r.encoding = "utf-8"
         soup = BeautifulSoup(r.text, "html.parser")
         
-        # Buscamos todas las filas de la tabla
         for tr in soup.find_all("tr"):
             texto_fila = tr.get_text(" ", strip=True).lower()
             
-            # Si no menciona nuestro club, saltamos a la siguiente fila
+            # Si no menciona nuestro club, saltamos
             if not any(k in texto_fila for k in CLUB_KEYS):
                 continue
 
@@ -32,21 +31,17 @@ def scrape_categoria(cat):
             
             celdas = [clean(td.get_text(" ", strip=True)) for td in tds]
             
-            # --- LÓGICA DE EXTRACCIÓN ---
+            # Detectar formato por posición de la fecha
             if re.search(r"\d{2}/\d{2}/\d{4}", celdas[0]):
                 # Formato Territorial
                 fecha, local, visitante, resultado = celdas[0], celdas[1], celdas[2], celdas[3]
                 lugar = celdas[4] if len(celdas) > 4 else ""
             else:
                 # Formato Base (Juvenil, Cadete, Infantil)
-                # En base: Celda 0=Equipos, Celda 1=Resultado, Celda 2=Fecha, Celda 3=Hora, Celda 4=Lugar
-                equipos = celdas[0]
-                resultado = celdas[1]
-                fecha = celdas[2]
+                equipos, resultado, fecha = celdas[0], celdas[1], celdas[2]
                 hora = celdas[3] if len(celdas) > 3 else ""
                 lugar = celdas[4] if len(celdas) > 4 else ""
                 
-                # Separar equipos
                 if " - " in equipos:
                     local, visitante = equipos.split(" - ", 1)
                 elif " vs " in equipos.lower():
@@ -59,8 +54,8 @@ def scrape_categoria(cat):
 
             matches.append({
                 "fecha_texto": fecha,
-                "local": local,
-                "visitante": visitante,
+                "local": local.strip(),
+                "visitante": visitante.strip(),
                 "resultado": resultado,
                 "lugar": lugar
             })
@@ -75,7 +70,7 @@ def scrape_categoria(cat):
 def main():
     with open("categories.json", "r", encoding="utf-8") as f:
         for cat in json.load(f):
-            scrape_categoria(cat)
+            if cat["url"]: scrape_categoria(cat)
 
 if __name__ == "__main__":
     main()
