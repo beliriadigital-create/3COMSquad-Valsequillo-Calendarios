@@ -2,11 +2,11 @@
   "categoria": "Liga Territorial Femenina",
   "matches": [
     {
-      "fecha_texto": "18/01/2026 12:00",
-      "local": "40 - 17",
+      "fecha_texto": "18/01/2026 | 12:00",
+      "local": "40-17",
       "visitante": "3COM Squad Valsequillo",
-      "resultado": "3COM Squad Valsequillo - CLUB DEPORTIVO CIUDAD DE PUERTO",
-      "lugar": "PABELLON MUNICIPAL EL MERCADILLO"
+      "resultado": "3COM Squad Valsequillo-CLUB DEPORTIVO CIUDAD DE PUERTO",
+      "lugar": "Pabellón Municipal"
     }
   ]
 }
