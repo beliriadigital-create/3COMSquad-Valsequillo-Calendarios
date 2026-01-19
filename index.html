@@ -10,28 +10,24 @@
         body { font-family: 'Inter', sans-serif; margin: 0; padding: 10px; color: white; background: #4a1033 url('fondo.png') no-repeat center center fixed; background-size: cover; }
         body::before { content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: -1; }
         .header { text-align: center; padding: 10px; }
-        .logo { max-width: 90px; }
-        h1 { font-size: 0.9rem; text-transform: uppercase; margin-top: 5px; opacity: 0.8; }
+        .logo { max-width: 80px; }
         
-        .cat-header { background: var(--primary); padding: 10px 15px; font-weight: 900; border-radius: 10px 10px 0 0; font-size: 0.75rem; margin-top: 20px; text-transform: uppercase; }
+        /* TARJETA PRINCIPAL */
+        .destacado { background: white; color: #333; border-radius: 20px; padding: 20px; max-width: 450px; margin: 0 auto 25px; text-align: center; border-left: 8px solid var(--primary); box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        .res-dest { background: var(--dark); color: white; font-size: 1.8rem; font-weight: 900; padding: 5px 20px; border-radius: 10px; display: inline-block; margin: 10px 0; }
+
+        /* CARRUSELES */
+        .cat-header { background: var(--primary); padding: 8px 15px; font-weight: 900; border-radius: 10px 10px 0 0; font-size: 0.7rem; margin-top: 20px; text-transform: uppercase; }
         .carousel { display: flex; overflow-x: auto; gap: 12px; padding: 12px 10px; background: rgba(255,255,255,0.05); border-radius: 0 0 10px 10px; -webkit-overflow-scrolling: touch; }
-        
-        .card { 
-            background: white; color: #333; 
-            min-width: 200px; width: 200px; 
-            padding: 12px; border-radius: 12px; 
-            flex-shrink: 0; text-align: center; 
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3); 
-            display: flex; flex-direction: column; justify-content: space-between;
-        }
-        .p-fecha { font-weight: 800; color: var(--primary); font-size: 0.75rem; margin-bottom: 8px; border-bottom: 1px solid #eee; padding-bottom: 4px; }
-        .p-equipos { font-weight: 700; font-size: 0.7rem; text-transform: uppercase; line-height: 1.3; color: #1a1a1a; }
-        .p-res { background: var(--dark); color: white; margin-top: 10px; padding: 5px; border-radius: 6px; font-weight: 900; font-size: 0.85rem; }
-        .vs-divider { color: #999; font-size: 0.6rem; margin: 3px 0; display: block; }
+        .card { background: white; color: #333; min-width: 190px; width: 190px; padding: 12px; border-radius: 12px; flex-shrink: 0; text-align: center; display: flex; flex-direction: column; justify-content: space-between; }
+        .p-fecha { font-weight: 800; color: var(--primary); font-size: 0.7rem; margin-bottom: 8px; border-bottom: 1px solid #eee; }
+        .p-equipos { font-weight: 700; font-size: 0.65rem; text-transform: uppercase; line-height: 1.2; }
+        .p-res { background: var(--dark); color: white; margin-top: 8px; padding: 4px; border-radius: 6px; font-weight: 900; font-size: 0.8rem; }
     </style>
 </head>
 <body>
-    <div class="header"><img src="logo.png" class="logo"><h1>3COM Squad Valsequillo</h1></div>
+    <div class="header"><img src="logo.png" class="logo"></div>
+    <div id="destacado-container"></div>
     <div id="lista-categorias"></div>
 
     <script>
@@ -39,6 +35,7 @@
             const res = await fetch('categories.json?v=' + Date.now());
             const cats = await res.json();
             const lista = document.getElementById('lista-categorias');
+            let todosLosPartidos = [];
 
             for (const c of cats) {
                 try {
@@ -47,20 +44,30 @@
                     if (data.matches && data.matches.length > 0) {
                         let cards = '';
                         data.matches.forEach(m => {
+                            todosLosPartidos.push({...m, catName: c.name});
                             cards += `
                                 <div class="card">
                                     <div class="p-fecha">🗓️ ${m.fecha_texto}</div>
-                                    <div class="p-equipos">
-                                        ${m.local}<br>
-                                        <span class="vs-divider">VS</span>
-                                        ${m.visitante}
-                                    </div>
+                                    <div class="p-equipos">${m.local}<br><span style="color:#999">vs</span><br>${m.visitante}</div>
                                     <div class="p-res">${m.resultado && m.resultado.includes('-') ? m.resultado : 'PRÓXIMO'}</div>
                                 </div>`;
                         });
                         lista.innerHTML += `<div><div class="cat-header">${c.name}</div><div class="carousel">${cards}</div></div>`;
                     }
-                } catch(e) { console.log("Error en " + c.slug); }
+                } catch(e) {}
+            }
+
+            if (todosLosPartidos.length > 0) {
+                // El primer partido de la lista será el destacado
+                const p = todosLosPartidos[0];
+                document.getElementById('destacado-container').innerHTML = `
+                    <div class="destacado">
+                        <div style="color:var(--primary); font-weight:900; font-size:0.7rem; text-transform:uppercase;">${p.catName}</div>
+                        <div style="font-size:0.8rem; margin:5px 0;">🗓️ ${p.fecha_texto}</div>
+                        <h3 style="margin:10px 0; font-size:0.9rem; text-transform:uppercase;">${p.local} <br>vs<br> ${p.visitante}</h3>
+                        <div class="res-dest">${p.resultado && p.resultado.includes('-') ? p.resultado : 'VS'}</div>
+                        <div style="font-size:0.7rem; color:#666;">📍 ${p.lugar}</div>
+                    </div>`;
             }
         }
         cargar();
