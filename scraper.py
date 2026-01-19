@@ -1,15 +1,14 @@
- import json
+import json
 import os
 import re
 import requests
 from bs4 import BeautifulSoup
-from datetime import datetime
 
-def limpiar_texto(t):
-    if not t: return ""
-    # Separar fecha de hora si están pegadas (DD/MM/AAAAHH:MM)
-    t = re.sub(r'(\d{2}/\d{2}/\d{4})(\d{2}:\d{2})', r'\1 | \2', t)
-    return t.replace('VS', '').strip()
+def limpiar_dato(texto):
+    if not texto: return ""
+    # SEPARAR FECHA Y HORA: Busca DD/MM/AAAAHH:MM y pone espacio y barra
+    texto = re.sub(r'(\d{2}/\d{2}/\d{4})(\d{2}:\d{2})', r'\1 | \2', texto)
+    return texto.replace('VS', '').strip()
 
 def scrape_categoria(cat):
     slug = cat['slug']
@@ -23,18 +22,17 @@ def scrape_categoria(cat):
             if "3com" in tr.get_text().lower():
                 tds = tr.find_all("td")
                 if len(tds) >= 4:
-                    # Extraemos y limpiamos cada campo
-                    f_raw = limpiar_texto(tds[0].get_text(strip=True))
-                    l_raw = limpiar_texto(tds[1].get_text(strip=True))
-                    v_raw = limpiar_texto(tds[2].get_text(strip=True))
-                    r_raw = limpiar_texto(tds[3].get_text(strip=True))
-                    lug_raw = limpiar_texto(tds[4].get_text(strip=True)) if len(tds) > 4 else ""
-
-                    # Si la fecha parece un resultado (ej. 40-17), reordenamos
-                    if "-" in f_raw and "/" in v_raw:
-                        matches.append({"fecha_texto": v_raw, "local": l_raw, "visitante": "3COM Squad Valsequillo", "resultado": f_raw, "lugar": r_raw})
+                    f = limpiar_dato(tds[0].get_text(strip=True))
+                    l = limpiar_dato(tds[1].get_text(strip=True))
+                    v = limpiar_dato(tds[2].get_text(strip=True))
+                    res = limpiar_dato(tds[3].get_text(strip=True))
+                    lug = limpiar_dato(tds[4].get_text(strip=True)) if len(tds) > 4 else ""
+                    
+                    # Corregir si iSquad da los datos movidos (Territorial)
+                    if "-" in f and "/" in v:
+                        matches.append({"fecha_texto": v, "local": l, "visitante": "3COM Squad Valsequillo", "resultado": f, "lugar": res})
                     else:
-                        matches.append({"fecha_texto": f_raw, "local": l_raw, "visitante": v_raw, "resultado": r_raw, "lugar": lug_raw})
+                        matches.append({"fecha_texto": f, "local": l, "visitante": v, "resultado": res, "lugar": lug})
         
         with open(f"{slug}/partidos.json", "w", encoding="utf-8") as f:
             json.dump({"categoria": cat['name'], "matches": matches}, f, ensure_ascii=False, indent=2)
