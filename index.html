@@ -124,7 +124,7 @@
             display: flex;
             flex-direction: column;
             box-sizing: border-box;
-            overflow: hidden; /* 🔒 CLAVE */
+            overflow: hidden;
         }
 
         .p-fecha {
@@ -192,6 +192,45 @@
     <div id="lista-categorias"></div>
 
     <script>
+        // ========== FUNCIONES AUXILIARES ==========
+
+        // 1️⃣ Abreviar pabellones
+        function abreviarPabellon(txt) {
+            if (!txt) return '';
+            return txt
+                .replace(/PABELLON/gi, 'PAB.')
+                .replace(/MUNICIPAL/gi, 'MUN.')
+                .replace(/INSULAR/gi, 'INS.')
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
+
+        // 2️⃣ Icono casa/fuera
+        function iconoCasaFuera(local, visitante) {
+            const club = 'valsequillo';
+            const l = (local || '').toLowerCase();
+            const v = (visitante || '').toLowerCase();
+            if (l.includes(club)) return '🏠';
+            if (v.includes(club)) return '🚌';
+            return '';
+        }
+
+        // 3️⃣ Parsear fecha para ordenar
+        function parseFecha(fecha) {
+            if (!fecha || !fecha.includes('/')) return null;
+            try {
+                const partes = fecha.split('|');
+                const [dd, mm, yyyy] = partes[0].trim().split('/');
+                const tiempo = partes[1] ? partes[1].trim().split(':') : ['00', '00'];
+                const [hh, mi] = tiempo;
+                return new Date(yyyy, mm - 1, dd, hh, mi);
+            } catch (e) {
+                return null;
+            }
+        }
+
+        // ========== CARGA Y RENDERIZADO ==========
+
         async function cargar() {
             const res = await fetch('categories.json?v=' + Date.now());
             const cats = await res.json();
@@ -204,21 +243,35 @@
                     const data = await rp.json();
 
                     if (data.matches && data.matches.length > 0) {
+                        
+                        // 3️⃣ ORDENAR POR FECHA (próximos primero, sin fecha al final)
+                        data.matches.sort((a, b) => {
+                            const fa = parseFecha(a.fecha_texto);
+                            const fb = parseFecha(b.fecha_texto);
+                            if (!fa && !fb) return 0;
+                            if (!fa) return 1;
+                            if (!fb) return -1;
+                            return fa - fb;
+                        });
+
                         let cards = '';
 
                         data.matches.forEach(m => {
                             todos.push({...m, cat: c.name});
 
+                            const icono = iconoCasaFuera(m.local, m.visitante);
+                            const lugarAbrev = abreviarPabellon(m.lugar);
+
                             cards += `
                                 <div class="card">
-                                    <div class="p-fecha">${m.fecha_texto}</div>
+                                    <div class="p-fecha">${icono} ${m.fecha_texto}</div>
                                     <div class="p-equipos">
                                         <div>${m.local}</div>
                                         <div style="color:#999;font-size:0.55rem;">VS</div>
                                         <div>${m.visitante}</div>
                                     </div>
                                     <div class="p-res">${m.resultado || 'PRÓXIMO'}</div>
-                                    <div class="p-lugar">📍 ${m.lugar}</div>
+                                    <div class="p-lugar">📍 ${lugarAbrev}</div>
                                 </div>`;
                         });
 
@@ -234,8 +287,26 @@
                 } catch (e) {}
             }
 
+            // ========== DESTACADO (próximo partido sin resultado) ==========
             if (todos.length > 0) {
-                const p = todos.find(m => !m.resultado || !m.resultado.includes('-')) || todos[todos.length - 1];
+                // Ordenar todos los partidos por fecha
+                todos.sort((a, b) => {
+                    const fa = parseFecha(a.fecha_texto);
+                    const fb = parseFecha(b.fecha_texto);
+                    if (!fa && !fb) return 0;
+                    if (!fa) return 1;
+                    if (!fb) return -1;
+                    return fa - fb;
+                });
+
+                // Buscar el próximo partido (sin resultado o sin marcador tipo "X-Y")
+                const p = todos.find(m => !m.resultado || !m.resultado.includes('-')) || todos[0];
+
+                const iconoDestacado = iconoCasaFuera(p.local, p.visitante);
+                const lugarDestacado = abreviarPabellon(p.lugar);
+
+                // --------- Aquí la mejora: mostramos "PRÓXIMO" si no hay resultado válido
+                const textoResultadoDestacado = (p.resultado && p.resultado !== 'VS') ? p.resultado : 'PRÓXIMO';
 
                 document.getElementById('destacado-container').innerHTML = `
                     <div class="destacado">
@@ -243,15 +314,15 @@
                             ${p.cat}
                         </div>
                         <div style="font-size:0.8rem;font-weight:700;margin-top:5px;">
-                            🗓️ ${p.fecha_texto}
+                            ${iconoDestacado} 🗓️ ${p.fecha_texto}
                         </div>
                         <h3 style="font-size:0.9rem;margin:10px 0;text-transform:uppercase;">
                             ${p.local}<br>
                             <span style="color:#999;font-size:0.7rem;">vs</span><br>
                             ${p.visitante}
                         </h3>
-                        <div class="res-dest">${p.resultado || 'VS'}</div>
-                        <div style="font-size:0.65rem;color:#666;">📍 ${p.lugar}</div>
+                        <div class="res-dest">${textoResultadoDestacado}</div>
+                        <div style="font-size:0.65rem;color:#666;">📍 ${lugarDestacado}</div>
                     </div>`;
             }
         }
