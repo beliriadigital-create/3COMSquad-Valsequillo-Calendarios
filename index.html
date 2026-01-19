@@ -1,97 +1,72 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>3COM Squad Valsequillo — Calendarios</title>
-  <style>
-    :root{ --bg:#2b0f18; --card:#fff; --accent:#7b1c3a; --text:#222; --muted:#8b6a7a; }
-    body{ font-family: system-ui, sans-serif; background: var(--bg); color: #fff; margin: 0; padding: 20px; }
-    .wrap{ max-width: 800px; margin: 0 auto; }
-    .logo-header{ text-align: center; margin-bottom: 30px; }
-    .logo-header img{ max-width: 200px; }
-    
-    .cat-section { margin-bottom: 40px; }
-    .cat-header { background: var(--accent); padding: 12px 20px; border-radius: 8px 8px 0 0; }
-    .cat-header h2 { margin: 0; font-size: 16px; text-transform: uppercase; }
-
-    .grid { display: flex; flex-direction: column; gap: 15px; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 0 0 8px 8px; }
-    .card { background: var(--card); color: var(--text); border-radius: 10px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-    
-    .meta-top { font-size: 14px; color: var(--muted); margin-bottom: 8px; font-weight: 700; }
-    .teams { font-weight: 800; font-size: 18px; text-align: center; margin: 10px 0; color: #000; }
-    .vs { color: var(--muted); margin: 0 5px; font-weight: 400; }
-    
-    .result-container { text-align: center; margin: 10px 0; }
-    .result { background: var(--accent); color: #fff; padding: 5px 15px; border-radius: 6px; font-weight: 900; font-size: 22px; display: inline-block; }
-    
-    /* ESTO ES LO QUE PONE EL PABELLON DEBAJO */
-    .lugar-box { 
-        display: block; 
-        width: 100%; 
-        margin-top: 15px; 
-        padding-top: 10px; 
-        border-top: 1px solid #eee; 
-        color: var(--muted); 
-        font-size: 13px; 
-        font-weight: 500;
-    }
-    .no-data { text-align: center; padding: 20px; color: rgba(255,255,255,0.3); }
-  </style>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>3COM Squad Valsequillo</title>
+    <style>
+        body { font-family: sans-serif; background: #2b0f18; color: white; padding: 15px; }
+        .logo { text-align: center; margin-bottom: 20px; }
+        .logo img { max-width: 150px; }
+        .categoria-titulo { background: #7b1c3a; padding: 10px; border-radius: 8px 8px 0 0; margin-top: 30px; font-size: 16px; text-transform: uppercase; }
+        .contenedor-partidos { background: rgba(255,255,255,0.1); padding: 10px; border-radius: 0 0 8px 8px; margin-bottom: 20px; }
+        .tarjeta { background: white; color: black; margin-bottom: 15px; border-radius: 10px; padding: 0; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .fecha-arriba { background: #f0f0f0; padding: 8px; font-size: 13px; font-weight: bold; color: #666; border-bottom: 1px solid #ddd; }
+        .cuerpo-tarjeta { padding: 15px; text-align: center; }
+        .equipos { font-size: 17px; font-weight: bold; margin-bottom: 10px; }
+        .resultado { background: #7b1c3a; color: white; padding: 5px 15px; border-radius: 5px; font-size: 20px; font-weight: bold; display: inline-block; }
+        /* EL PABELLON ABAJO FORZADO */
+        .pabellon-abajo { background: #fff; padding: 10px; border-top: 2px solid #eee; color: #8b6a7a; font-size: 13px; font-weight: 600; }
+        .no-partidos { padding: 20px; text-align: center; opacity: 0.5; }
+    </style>
 </head>
 <body>
+    <div class="logo"><img src="logo.png"></div>
+    <div id="app"></div>
 
-<div class="wrap">
-  <div class="logo-header"><img src="logo.png"></div>
-  <div id="master-container"></div>
-</div>
+    <script>
+        const cats = [
+            { n: "Liga Territorial Femenina", s: "TF" },
+            { n: "Juvenil Femenino", s: "JUVF" },
+            { n: "Cadete Femenino", s: "CADF" },
+            { n: "Infantil Femenino", s: "INFF" }
+        ];
+        const app = document.getElementById('app');
 
-<script>
-const categorias = [
-  { name: "Liga Territorial Femenina", slug: "TF" },
-  { name: "Juvenil Femenino", slug: "JUVF" },
-  { name: "Cadete Femenino", slug: "CADF" },
-  { name: "Infantil Femenino", slug: "INFF" }
-];
+        cats.forEach(c => {
+            const html = `
+                <div class="categoria-titulo">${c.n}</div>
+                <div class="contenedor-partidos" id="lista-${c.s}"><div class="no-partidos">Cargando...</div></div>
+            `;
+            app.insertAdjacentHTML('beforeend', html);
 
-const container = document.getElementById('master-container');
-
-categorias.forEach(cat => {
-  const section = document.createElement('div');
-  section.className = 'cat-section';
-  section.innerHTML = `
-    <div class="cat-header"><h2>${cat.name}</h2></div>
-    <div class="grid" id="grid-${cat.slug}"><div class="no-data">Cargando...</div></div>
-  `;
-  container.appendChild(section);
-
-  fetch(`${cat.slug}/partidos.json?v=${new Date().getTime()}`)
-    .then(r => r.json())
-    .then(data => {
-      const grid = document.getElementById(`grid-${cat.slug}`);
-      grid.innerHTML = '';
-      const matches = data.matches || [];
-      if (matches.length === 0) {
-        grid.innerHTML = '<div class="no-data">No hay partidos próximos.</div>';
-        return;
-      }
-      matches.forEach(m => {
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.innerHTML = `
-          <div class="meta-top">📅 ${m.fecha_texto}</div>
-          <div class="teams">${m.local} <span class="vs">vs</span> ${m.visitante}</div>
-          <div class="result-container">
-            ${m.resultado && m.resultado !== '-' ? `<span class="result">${m.resultado}</span>` : ''}
-          </div>
-          <div class="lugar-box">📍 ${m.lugar || 'Pabellón por confirmar'}</div>
-        `;
-        grid.appendChild(card);
-      });
-    }).catch(() => {
-      document.getElementById(`grid-${cat.slug}`).innerHTML = '<div class="no-data">Sin datos.</div>';
-    });
-});
-</script>
+            fetch(`${c.s}/partidos.json?v=${Date.now()}`)
+                .then(r => r.json())
+                .then(data => {
+                    const lista = document.getElementById(`lista-${c.s}`);
+                    lista.innerHTML = '';
+                    if (!data.matches || data.matches.length === 0) {
+                        lista.innerHTML = '<div class="no-partidos">No hay partidos próximos.</div>';
+                        return;
+                    }
+                    data.matches.forEach(m => {
+                        const card = `
+                            <div class="tarjeta">
+                                <div class="fecha-arriba">📅 ${m.fecha_texto}</div>
+                                <div class="cuerpo-tarjeta">
+                                    <div class="equipos">${m.local} <br><small style="color:#999;font-weight:normal">vs</small><br> ${m.visitante}</div>
+                                    ${m.resultado && m.resultado !== '-' ? `<div class="resultado">${m.resultado}</div>` : ''}
+                                </div>
+                                <div class="pabellon-abajo">📍 ${m.lugar || 'Pabellón por confirmar'}</div>
+                            </div>
+                        `;
+                        lista.insertAdjacentHTML('beforeend', card);
+                    });
+                })
+                .catch(() => {
+                    document.getElementById(`lista-${c.s}`).innerHTML = '<div class="no-partidos">Sin datos.</div>';
+                });
+        });
+    </script>
 </body>
 </html>
