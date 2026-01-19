@@ -2,7 +2,7 @@ import json, os, re, requests
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
 
-def limpiar_texto(t):
+def limpiar(t):
     if not t: return ""
     t = re.sub(r"(\d{2}/\d{2}/\d{4})(\d{2}:\d{2})", r"\1 | \2", t)
     return t.replace("VS", "").strip()
@@ -17,37 +17,39 @@ def scrape_categoria(cat):
         soup = BeautifulSoup(r.text, "html.parser")
         for tr in soup.find_all("tr"):
             txt = tr.get_text().lower()
-            if "3com" in txt or "valsequillo" in txt:
+            # Buscamos cualquier rastro del club
+            if any(k in txt for k in ["3com", "valsequillo", "squad"]):
                 tds = tr.find_all("td")
                 if len(tds) >= 4:
-                    f = limpiar_texto(tds[0].get_text(strip=True))
-                    l = limpiar_texto(tds[1].get_text(strip=True))
-                    v = limpiar_texto(tds[2].get_text(strip=True))
-                    res = limpiar_texto(tds[3].get_text(strip=True))
-                    lug = tds[4].get_text(strip=True) if len(tds) > 4 else "Pabellón Municipal"
+                    # Extraemos datos brutos
+                    d0, d1, d2, d3 = tds[0].text.strip(), tds[1].text.strip(), tds[2].text.strip(), tds[3].text.strip()
                     
-                    # Corrección específica para Territorial (iSquad mueve las columnas)
-                    if "/" not in f and "/" in v:
-                        # En este caso: f=resultado, l=local, v=fecha, res=visitante
-                        matches.append({
-                            "fecha_texto": limpiar_texto(v),
-                            "local": l,
-                            "visitante": "3COM Squad Valsequillo",
-                            "resultado": f,
-                            "lugar": res if len(res) > 5 else lug
-                        })
+                    # LÓGICA ANTIFALLO: Si d0 es un resultado (ej: 40-17) y d2 tiene fecha
+                    if "-" in d0 and "/" in d2:
+                        fecha = limpiar(d2)
+                        local = d1
+                        visitante = "3COM Squad Valsequillo"
+                        resultado = d0
+                        lugar = d3 if len(d3) > 5 else "Pabellón Municipal"
                     else:
-                        matches.append({
-                            "fecha_texto": f,
-                            "local": l,
-                            "visitante": v,
-                            "resultado": res,
-                            "lugar": lug
-                        })
+                        fecha = limpiar(d0)
+                        local = d1
+                        visitante = d2
+                        resultado = d3
+                        lugar = tds[4].text.strip() if len(tds) > 4 else "Pabellón Municipal"
+
+                    matches.append({
+                        "fecha_texto": fecha,
+                        "local": local,
+                        "visitante": visitante,
+                        "resultado": resultado,
+                        "lugar": lugar
+                    })
         
         with open(f"{slug}/partidos.json", "w", encoding="utf-8") as f:
             json.dump({"matches": matches}, f, ensure_ascii=False)
             
+        # Generar ICS
         lines = ["BEGIN:VCALENDAR","VERSION:2.0","X-WR-CALNAME:"+cat['name']]
         for m in matches:
             try:
@@ -56,7 +58,8 @@ def scrape_categoria(cat):
             except: pass
         lines.append("END:VCALENDAR")
         with open(f"{slug}/calendar.ics", "w", encoding="utf-8") as f: f.write("\n".join(lines))
-    except: pass
+        print(f"✅ {cat['name']}: {len(matches)} partidos encontrados.")
+    except Exception as e: print(f"❌ Error en {cat['name']}: {e}")
 
 def main():
     with open("categories.json", "r", encoding="utf-8") as f:
