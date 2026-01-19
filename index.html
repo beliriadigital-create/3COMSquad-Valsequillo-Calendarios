@@ -8,36 +8,77 @@
     <style>
         :root { --primary: #b01c68; --dark: #4a1033; }
         body { 
-            font-family: 'Inter', sans-serif; margin: 0; padding: 20px; color: white;
+            font-family: 'Inter', sans-serif; margin: 0; padding: 15px; color: white;
             background: #4a1033 url('fondo.png') no-repeat center center fixed; background-size: cover;
         }
-        body::before { content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: -1; }
-        .header { text-align: center; margin-bottom: 30px; }
-        .logo { max-width: 800px; width: 100%; height: auto; }
+        body::before { content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); z-index: -1; }
         
+        .header { text-align: center; margin-bottom: 20px; }
+        .logo { max-width: 100px; height: auto; margin-bottom: 10px; }
+        h1 { font-size: 1.1rem; text-transform: uppercase; font-weight: 900; margin: 0; letter-spacing: 1px; }
+
+        /* Tarjeta Principal */
         .destacado-card { 
             background: white; color: #1a1a1a; border-radius: 20px; padding: 20px;
-            max-width: 600px; margin: 0 auto 40px; text-align: center; border-left: 10px solid var(--primary);
+            max-width: 500px; margin: 0 auto 30px; text-align: center; border-left: 8px solid var(--primary);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
-        .destacado-tag { background: var(--primary); color: white; padding: 5px 15px; border-radius: 50px; font-size: 0.8rem; font-weight: 900; }
-        .resultado-box { background: var(--dark); color: white; font-size: 2.5rem; font-weight: 900; padding: 10px 20px; border-radius: 10px; display: inline-block; margin: 15px 0; }
+        .destacado-tag { background: var(--primary); color: white; padding: 4px 12px; border-radius: 50px; font-size: 0.7rem; font-weight: 900; text-transform: uppercase; }
+        .res-grande { background: var(--dark); color: white; font-size: 2rem; font-weight: 900; padding: 8px 20px; border-radius: 12px; display: inline-block; margin: 10px 0; }
+        .fecha-dest { color: var(--primary); font-weight: 800; font-size: 0.95rem; display: block; margin-top: 10px; }
 
-        .cat-section { max-width: 800px; margin: 0 auto 20px; background: rgba(255,255,255,0.1); border-radius: 15px; overflow: hidden; }
-        .cat-header { background: var(--primary); padding: 15px; font-weight: 900; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
-        .btn-cal { background: white; color: var(--primary); padding: 5px 10px; border-radius: 5px; text-decoration: none; font-size: 0.7rem; font-weight: 900; }
-        
-        .partido-row { background: white; color: #333; margin: 10px; padding: 15px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; }
-        .p-fecha { font-weight: 800; color: var(--primary); min-width: 110px; }
-        .p-equipos { flex-grow: 1; font-weight: 700; padding: 0 10px; }
-        .p-res { background: #eee; padding: 5px 10px; border-radius: 5px; font-weight: 900; }
+        /* Secciones de Categoría */
+        .cat-section { max-width: 1000px; margin: 0 auto 25px; }
+        .cat-header { 
+            padding: 0 10px 10px; font-weight: 900; display: flex; 
+            justify-content: space-between; align-items: center; font-size: 0.9rem;
+            border-bottom: 2px solid rgba(255,255,255,0.1); margin-bottom: 10px;
+        }
+        .btn-cal { background: var(--primary); color: white; padding: 5px 10px; border-radius: 6px; text-decoration: none; font-size: 0.6rem; font-weight: 900; }
+
+        /* CONTENEDOR HORIZONTAL */
+        .cat-body { 
+            display: flex; 
+            overflow-x: auto; 
+            gap: 15px; 
+            padding: 5px 5px 15px 5px;
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+        }
+        /* Ocultar barra de scroll en algunos navegadores */
+        .cat-body::-webkit-scrollbar { height: 5px; }
+        .cat-body::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
+
+        /* Tarjeta de Partido Individual (Horizontal) */
+        .partido-card { 
+            background: white; color: #333; min-width: 220px; max-width: 220px;
+            padding: 15px; border-radius: 15px; scroll-snap-align: start;
+            flex-shrink: 0; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            display: flex; flex-direction: column; justify-content: space-between;
+            text-align: center;
+        }
+        .p-fecha { font-weight: 800; color: var(--primary); font-size: 0.8rem; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        .p-equipos { font-weight: 700; font-size: 0.8rem; text-transform: uppercase; flex-grow: 1; display: flex; flex-direction: column; justify-content: center; gap: 5px; }
+        .p-res { background: var(--dark); color: white; margin-top: 10px; padding: 5px; border-radius: 8px; font-weight: 900; font-size: 1rem; }
+        .vs-text { color: #999; font-size: 0.7rem; }
     </style>
 </head>
 <body>
-    <div class="header"><img src="logo.png" class="logo"></div>
+    <div class="header">
+        <img src="logo.png" class="logo">
+        <h1>3COM Squad Valsequillo</h1>
+    </div>
     <div id="destacado"></div>
     <div id="categorias-lista"></div>
 
     <script>
+        function formatearFecha(texto) {
+            if (!texto) return "";
+            // Separa DD/MM/AAAA de HH:MM si están pegados
+            let t = String(texto).replace(/(\d{2}\/\d{2}\/\d{4})(\d{2}:\d{2})/, '$1 | $2');
+            return t.replace('VS', '').trim();
+        }
+
         async function cargar() {
             const res = await fetch('categories.json?v=' + Date.now());
             const cats = await res.json();
@@ -51,12 +92,18 @@
                     
                     let htmlPartidos = '';
                     data.matches.forEach(m => {
-                        todosLosPartidos.push({...m, cat: c.name});
+                        const fLimpia = formatearFecha(m.fecha_texto || m.visitante);
+                        todosLosPartidos.push({...m, cat: c.name, fLimpia});
+                        
                         htmlPartidos += `
-                            <div class="partido-row">
-                                <div class="p-fecha">${m.fecha_texto || m.visitante}</div>
-                                <div class="p-equipos">${m.local} vs ${m.visitante}</div>
-                                <div class="p-res">${m.resultado || 'vs'}</div>
+                            <div class="partido-card">
+                                <div class="p-fecha">🗓️ ${fLimpia}</div>
+                                <div class="p-equipos">
+                                    <span>${m.local}</span>
+                                    <span class="vs-text">vs</span>
+                                    <span>${m.visitante}</span>
+                                </div>
+                                <div class="p-res">${m.resultado && m.resultado.includes('-') ? m.resultado : 'PRÓXIMO'}</div>
                             </div>`;
                     });
 
@@ -64,23 +111,24 @@
                         <div class="cat-section">
                             <div class="cat-header">
                                 <span>${c.name}</span>
-                                <a href="./${c.slug}/calendar.ics" class="btn-cal">📅 AÑADIR AL CALENDARIO</a>
+                                <a href="./${c.slug}/calendar.ics" class="btn-cal">📅 CALENDARIO</a>
                             </div>
-                            <div class="cat-body">${htmlPartidos || '<p style="padding:10px">No hay partidos listados</p>'}</div>
+                            <div class="cat-body">${htmlPartidos || '<p style="opacity:0.5; font-size:0.8rem;">No hay partidos</p>'}</div>
                         </div>`;
                 } catch(e) {}
             }
             
-            // Pintar el primero como destacado (ejemplo simple)
             if(todosLosPartidos.length > 0) {
-                const p = todosLosPartidos[0];
+                // Buscamos el primer partido que no tenga resultado (el próximo)
+                let p = todosLosPartidos.find(m => !m.resultado || !m.resultado.includes('-')) || todosLosPartidos[0];
+                
                 document.getElementById('destacado').innerHTML = `
                     <div class="destacado-card">
-                        <span class="destacado-tag">${p.cat}</span><br><br>
-                        <strong>${p.fecha_texto || p.visitante}</strong>
-                        <h3>${p.local} vs ${p.visitante}</h3>
-                        <div class="resultado-box">${p.resultado || 'VS'}</div>
-                        <p>📍 ${p.lugar}</p>
+                        <span class="destacado-tag">${p.cat}</span>
+                        <span class="fecha-dest">🗓️ ${p.fLimpia}</span>
+                        <h3 style="margin:10px 0; text-transform:uppercase; font-size:1rem;">${p.local} <br><small style="color:#999">vs</small><br> ${p.visitante}</h3>
+                        <div class="res-grande">${p.resultado && p.resultado.includes('-') ? p.resultado : 'VS'}</div>
+                        <p style="font-size:0.75rem; color:#666; margin:0;">📍 ${p.lugar || 'Pabellón Municipal'}</p>
                     </div>`;
             }
         }
