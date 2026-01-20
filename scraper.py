@@ -2,7 +2,7 @@ import json, os, re, requests
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
 
-# Filtro flexible para capturar todas las categorías
+# Palabras clave para detectar el club en cualquier formato
 CLUB_KEYS = ["3com", "valsequillo", "squad"]
 
 def clean(s: str) -> str:
@@ -12,6 +12,7 @@ def scrape_categoria(cat):
     slug = cat["slug"]
     os.makedirs(slug, exist_ok=True)
     matches = []
+    partido_principal = None
     print(f"--- Procesando: {cat['name']} ---")
 
     try:
@@ -21,8 +22,6 @@ def scrape_categoria(cat):
         
         for tr in soup.find_all("tr"):
             texto_fila = tr.get_text(" ", strip=True).lower()
-            
-            # Si no menciona nuestro club, saltamos
             if not any(k in texto_fila for k in CLUB_KEYS):
                 continue
 
@@ -31,13 +30,10 @@ def scrape_categoria(cat):
             
             celdas = [clean(td.get_text(" ", strip=True)) for td in tds]
             
-            # Detectar formato por posición de la fecha
             if re.search(r"\d{2}/\d{2}/\d{4}", celdas[0]):
-                # Formato Territorial
                 fecha, local, visitante, resultado = celdas[0], celdas[1], celdas[2], celdas[3]
                 lugar = celdas[4] if len(celdas) > 4 else ""
             else:
-                # Formato Base (Juvenil, Cadete, Infantil)
                 equipos, resultado, fecha = celdas[0], celdas[1], celdas[2]
                 hora = celdas[3] if len(celdas) > 3 else ""
                 lugar = celdas[4] if len(celdas) > 4 else ""
@@ -52,13 +48,32 @@ def scrape_categoria(cat):
                 if hora and "/" not in hora:
                     fecha = f"{fecha} | {hora}"
 
-            matches.append({
+            partido = {
                 "fecha_texto": fecha,
-                "local": local.strip(),
-                "visitante": visitante.strip(),
+                "local": local,
+                "visitante": visitante,
                 "resultado": resultado,
-                "lugar": lugar
-            })
+                "lugar": lugar,
+                "estado": "Finalizado" if resultado and resultado != "-" else "Pendiente"
+            }
+
+            matches.append(partido)
+
+            # Detectar partido principal: el primero pendiente o el último finalizado
+            if partido_principal is None:
+                if partido["estado"] == "Pendiente":
+                    partido_principal = partido
+            elif partido["estado"] == "Pendiente":
+                # Si hay otro pendiente más reciente, lo actualizamos
+                partido_principal = partido
+
+        # Si no hay pendiente, ponemos el último finalizado
+        if partido_principal is None and matches:
+            partido_principal = matches[-1]
+
+        # Guardar JSON con partido principal al inicio
+        if partido_principal:
+            matches = [partido_principal] + [m for m in matches if m != partido_principal]
 
         with open(f"{slug}/partidos.json", "w", encoding="utf-8") as f:
             json.dump({"matches": matches}, f, ensure_ascii=False, indent=2)
