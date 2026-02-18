@@ -1,12 +1,12 @@
 {
   "matches": [
     {
-      "fecha_texto": "14/02/2026 9:00 | PABELLON LEONCIO CASTELLANO ARENCIBIA",
-      "local": "VS ROMADE",
+      "fecha_texto": "20/02/2026 19:30 | PABELLON INSULAR ANTONIO MORENO",
+      "local": "VS BM. ROCASA",
       "visitante": "3COM SQUAD VALSEQUILLO",
-      "resultado": "26 - 30",
-      "lugar": "Finalizado",
-      "estado": "Finalizado"
+      "resultado": "-",
+      "lugar": "Pendiente",
+      "estado": "Pendiente"
     }
   ]
 }
