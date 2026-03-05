@@ -1,12 +1,12 @@
 {
   "matches": [
     {
-      "fecha_texto": "01/03/2026 12:30 | I.E.S. Tegueste",
-      "local": "VS BALONMANO TEGUESTE CLÍNICA VETERINARIA EL DRAGO",
-      "visitante": "3COM Squad Valsequillo",
-      "resultado": "19 - 37",
-      "lugar": "Finalizado",
-      "estado": "Finalizado"
+      "fecha_texto": "08/03/2026 12:00 | PABELLON MUNICIPAL EL MERCADILLO",
+      "local": "VS 3COM Squad Valsequillo",
+      "visitante": "CB San Jose Obrero",
+      "resultado": "-",
+      "lugar": "Pendiente",
+      "estado": "Pendiente"
     }
   ]
 }
