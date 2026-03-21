@@ -1,20 +1,3 @@
 {
-  "matches": [
-    {
-      "fecha_texto": "21/03/2026 12:00 | PABELLON MUNICIPAL EL MERCADILLO",
-      "local": "VS ATLANTEC, GÁLDAR BF",
-      "visitante": "3COM Squad Valsequillo",
-      "resultado": "-",
-      "lugar": "Pendiente",
-      "estado": "Pendiente"
-    },
-    {
-      "fecha_texto": "20/03/2026 17:00 | PABELLON MUNICIPAL EL MERCADILLO",
-      "local": "VS 3COM Squad Valsequillo",
-      "visitante": "ATLANTEC, GÁLDAR BF",
-      "resultado": "-",
-      "lugar": "Pendiente",
-      "estado": "Pendiente"
-    }
-  ]
+  "matches": []
 }
